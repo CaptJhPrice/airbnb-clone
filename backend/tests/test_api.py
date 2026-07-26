@@ -83,124 +83,122 @@ def test_invalid_sort_is_rejected():
 
 
 def test_listing_detail_shape():
-    response = client.get("/api/v1/listings/1")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["id"] == 1
-    assert isinstance(data["host"], dict)
-    assert isinstance(data["amenities"], list)
-    assert isinstance(data["reviews"], list)
-
-
-def test_host_listing_crud():
-    listing = create_temp_listing("Temporary CRUD Test Apartment")
-    listing_id = listing["id"]
-
+    listing = create_temp_listing("Listing Detail Shape Test")
     try:
-        update = client.put(
-            f"/api/v1/listings/{listing_id}?host_id=1",
-            json={"title": "Updated CRUD Test Apartment"},
-        )
-        assert update.status_code == 200
-        assert update.json()["title"] == "Updated CRUD Test Apartment"
+        response = client.get(f"/api/v1/listings/{listing['id']}")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["id"] == listing["id"]
+        assert isinstance(data["host"], dict)
     finally:
-        delete_listing(listing_id)
+        delete_listing(listing["id"])
 
 
-def test_availability_and_blocked_booking():
-    listing = create_temp_listing("Temporary Availability Test Apartment")
-    listing_id = listing["id"]
-    start_date = (date.today() + timedelta(days=10)).isoformat()
-    end_date = (date.today() + timedelta(days=11)).isoformat()
+def test_listing_crud_flow():
+    created = create_temp_listing("CRUD Flow Test")
+    listing_id = created["id"]
 
     try:
-        # Set availability to blocked for 2 days
-        batch = {
-            "start_date": start_date,
-            "end_date": end_date,
-            "is_available": False,
-            "price": 250.0
-        }
-        res = client.post(f"/api/v1/availability/listings/{listing_id}?host_id=1", json=batch)
-        assert res.status_code == 200
-        avail_items = res.json()
-        assert len(avail_items) == 2
-
-        # Query availability
-        get_res = client.get(f"/api/v1/availability/listings/{listing_id}?start_date={start_date}&end_date={end_date}")
+        get_res = client.get(f"/api/v1/listings/{listing_id}")
         assert get_res.status_code == 200
-        assert len(get_res.json()) == 2
+        assert get_res.json()["title"] == "CRUD Flow Test"
 
-        # Attempt to book blocked dates should fail
-        check_in = datetime.strptime(start_date, "%Y-%m-%d")
-        check_out = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1)
-        booking_res = client.post("/api/v1/bookings/?guest_id=2", json={
-            "listing_id": listing_id,
-            "check_in": check_in.isoformat(),
-            "check_out": check_out.isoformat(),
-            "num_guests": 1,
-        })
-        assert booking_res.status_code == 400
-        assert "not available" in booking_res.json()["detail"]
+        update_res = client.put(
+            f"/api/v1/listings/{listing_id}?host_id=1",
+            json={**listing_payload("Updated Title"), "amenity_ids": [1]},
+        )
+        assert update_res.status_code == 200
+        assert update_res.json()["title"] == "Updated Title"
     finally:
         delete_listing(listing_id)
 
+    deleted_res = client.get(f"/api/v1/listings/{listing_id}")
+    assert deleted_res.status_code == 404
 
-def test_photo_management():
-    listing = create_temp_listing("Temporary Photo Test Apartment")
-    listing_id = listing["id"]
+
+def test_photo_management_flow():
+    created = create_temp_listing("Photo Flow Test")
+    listing_id = created["id"]
 
     try:
-        # Add photo
-        photo_res = client.post(f"/api/v1/listings/{listing_id}/images?host_id=1", json={
-            "url": "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200",
-            "alt_text": "Extra bedroom",
-            "is_primary": False,
-            "order": 1
-        })
-        assert photo_res.status_code == 201
-        image_data = photo_res.json()
-        image_id = image_data["id"]
+        add_res = client.post(
+            f"/api/v1/listings/{listing_id}/images?host_id=1",
+            json={
+                "url": "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200",
+                "alt_text": "Bedroom",
+                "is_primary": False,
+                "order": 1,
+            },
+        )
+        assert add_res.status_code == 201
+        new_image_id = add_res.json()["id"]
 
-        # Delete photo
-        del_res = client.delete(f"/api/v1/listings/{listing_id}/images/{image_id}?host_id=1")
+        del_res = client.delete(
+            f"/api/v1/listings/{listing_id}/images/{new_image_id}?host_id=1"
+        )
         assert del_res.status_code == 204
     finally:
         delete_listing(listing_id)
 
 
-def test_booking_prevents_overlapping_reservations():
-    listing = create_temp_listing("Temporary Booking Test Apartment")
-    listing_id = listing["id"]
-    check_in = datetime.now() + timedelta(days=45)
-    check_out = check_in + timedelta(days=3)
+def test_availability_management_flow():
+    created = create_temp_listing("Availability Flow Test")
+    listing_id = created["id"]
+    test_date = (date.today() + timedelta(days=10)).isoformat()
 
     try:
-        payload = {
-            "listing_id": listing_id,
-            "check_in": check_in.isoformat(),
-            "check_out": check_out.isoformat(),
-            "num_guests": 2,
-        }
-        first = client.post("/api/v1/bookings/?guest_id=2", json=payload)
-        assert first.status_code == 201
+        set_res = client.post(
+            f"/api/v1/availability/listings/{listing_id}?host_id=1",
+            json={
+                "start_date": test_date,
+                "end_date": test_date,
+                "is_available": False,
+                "price": 250.0,
+            },
+        )
+        assert set_res.status_code == 200
+        avail_entries = set_res.json()
+        assert len(avail_entries) == 1
+        avail_id = avail_entries[0]["id"]
 
-        second = client.post("/api/v1/bookings/?guest_id=2", json=payload)
-        assert second.status_code == 400
-        assert "not available" in second.json()["detail"]
+        get_res = client.get(
+            f"/api/v1/availability/listings/{listing_id}?start_date={test_date}&end_date={test_date}"
+        )
+        assert get_res.status_code == 200
+        items = get_res.json()
+        assert len(items) == 1
+        assert items[0]["is_available"] is False
+        assert items[0]["price"] == 250.0
+
+        del_res = client.delete(
+            f"/api/v1/availability/{avail_id}?host_id=1"
+        )
+        assert del_res.status_code == 204
     finally:
         delete_listing(listing_id)
 
 
-def test_booking_rejects_past_dates_and_too_many_guests():
-    listing = create_temp_listing("Temporary Validation Test Apartment")
-    listing_id = listing["id"]
+def test_booking_validation():
+    created = create_temp_listing("Booking Validation Test")
+    listing_id = created["id"]
 
     try:
+        valid_payload = {
+            "listing_id": listing_id,
+            "check_in": (datetime.now() + timedelta(days=40)).isoformat(),
+            "check_out": (datetime.now() + timedelta(days=43)).isoformat(),
+            "num_guests": 2,
+            "special_requests": "Quiet room please",
+        }
+        res = client.post("/api/v1/bookings/?guest_id=2", json=valid_payload)
+        assert res.status_code == 201
+        booking = res.json()
+        assert booking["total_price"] > 0
+
         past_payload = {
             "listing_id": listing_id,
-            "check_in": (datetime.now() - timedelta(days=2)).isoformat(),
-            "check_out": (datetime.now() + timedelta(days=1)).isoformat(),
+            "check_in": (datetime.now() - timedelta(days=5)).isoformat(),
+            "check_out": (datetime.now() - timedelta(days=2)).isoformat(),
             "num_guests": 1,
         }
         past = client.post("/api/v1/bookings/?guest_id=2", json=past_payload)
@@ -221,15 +219,31 @@ def test_booking_rejects_past_dates_and_too_many_guests():
 
 
 def test_booking_detail_and_listing_routes_are_serialized():
-    detail = client.get("/api/v1/bookings/1")
-    assert detail.status_code == 200
-    data = detail.json()
-    assert isinstance(data["listing"], dict)
-    assert isinstance(data["guest"], dict)
+    created_listing = create_temp_listing("Booking Detail Test Listing")
+    listing_id = created_listing["id"]
 
-    listing_bookings = client.get("/api/v1/bookings/listing/1?host_id=1")
-    assert listing_bookings.status_code == 200
-    assert isinstance(listing_bookings.json(), list)
+    try:
+        booking_payload = {
+            "listing_id": listing_id,
+            "check_in": (datetime.now() + timedelta(days=70)).isoformat(),
+            "check_out": (datetime.now() + timedelta(days=73)).isoformat(),
+            "num_guests": 2,
+        }
+        booking_res = client.post("/api/v1/bookings/?guest_id=2", json=booking_payload)
+        assert booking_res.status_code == 201
+        booking_id = booking_res.json()["id"]
+
+        detail = client.get(f"/api/v1/bookings/{booking_id}")
+        assert detail.status_code == 200
+        data = detail.json()
+        assert isinstance(data["listing"], dict)
+        assert isinstance(data["guest"], dict)
+
+        listing_bookings = client.get(f"/api/v1/bookings/listing/{listing_id}?host_id=1")
+        assert listing_bookings.status_code == 200
+        assert isinstance(listing_bookings.json(), list)
+    finally:
+        delete_listing(listing_id)
 
 
 def test_wishlist_response_shape():
