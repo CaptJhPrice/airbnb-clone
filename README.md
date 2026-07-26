@@ -68,6 +68,16 @@ npm run build
 
 The root repository is initialized on `main`. See [docs/GITHUB.md](docs/GITHUB.md) for authentication, remote setup, and push commands.
 
+## Deployment
+
+Deployment config is included:
+
+- `render.yaml` for the FastAPI backend
+- `frontend/vercel.json` for the Next.js frontend
+- `backend/Procfile` and `backend/start.sh` for Python web-service hosts
+
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
 ## Implemented Features
 
 - Home page with Airbnb-style header, category navigation, search, filters, sort, and responsive listing grid

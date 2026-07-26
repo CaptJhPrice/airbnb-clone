@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: staybnb-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: alembic upgrade head && python scripts/seed_db.py && uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.11
+      - key: DATABASE_URL
+        value: sqlite:///./airbnb.db
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 10080
+      - key: BACKEND_CORS_ORIGINS
+        value: '["http://localhost:3000"]'

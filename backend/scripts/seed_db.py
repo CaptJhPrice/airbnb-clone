@@ -41,7 +41,7 @@ def seed_categories(db: Session):
             db.add(category)
     
     db.commit()
-    print("✓ Categories seeded")
+    print("[ok] Categories seeded")
 
 
 def seed_amenities(db: Session):
@@ -68,7 +68,7 @@ def seed_amenities(db: Session):
             db.add(amenity)
     
     db.commit()
-    print("✓ Amenities seeded")
+    print("[ok] Amenities seeded")
 
 
 def seed_users(db: Session):
@@ -109,7 +109,7 @@ def seed_users(db: Session):
             db.add(user)
     
     db.commit()
-    print("✓ Users seeded")
+    print("[ok] Users seeded")
 
 
 def seed_listings(db: Session):
@@ -117,7 +117,7 @@ def seed_listings(db: Session):
     # Get host user
     host = db.query(User).filter(User.email == "john@example.com").first()
     if not host:
-        print("✗ Host user not found")
+        print("[error] Host user not found")
         return
     
     # Get categories
@@ -243,6 +243,10 @@ def seed_listings(db: Session):
     ]
     
     for listing_data in listings_data:
+        existing = db.query(Listing).filter(Listing.title == listing_data["title"]).first()
+        if existing:
+            continue
+
         category = listing_data.pop("category")
         amenity_names = listing_data.pop("amenities")
         images_data = listing_data.pop("images")
@@ -271,7 +275,7 @@ def seed_listings(db: Session):
                 db.add(listing_amenity)
     
     db.commit()
-    print("✓ Listings seeded")
+    print("[ok] Listings seeded")
 
 
 def seed_bookings(db: Session):
@@ -280,7 +284,7 @@ def seed_bookings(db: Session):
     listing = db.query(Listing).first()
     
     if not guest or not listing:
-        print("✗ Guest or listing not found")
+        print("[error] Guest or listing not found")
         return
     
     bookings_data = [
@@ -320,7 +324,7 @@ def seed_bookings(db: Session):
             db.add(booking)
     
     db.commit()
-    print("✓ Bookings seeded")
+    print("[ok] Bookings seeded")
 
 
 def seed_reviews(db: Session):
@@ -329,7 +333,7 @@ def seed_reviews(db: Session):
     listing = db.query(Listing).first()
     
     if not guest or not listing:
-        print("✗ Guest or listing not found")
+        print("[error] Guest or listing not found")
         return
     
     reviews_data = [
@@ -358,7 +362,7 @@ def seed_reviews(db: Session):
             db.add(review)
     
     db.commit()
-    print("✓ Reviews seeded")
+    print("[ok] Reviews seeded")
 
 
 def seed_wishlists(db: Session):
@@ -367,16 +371,32 @@ def seed_wishlists(db: Session):
     listing = db.query(Listing).first()
     
     if not guest or not listing:
-        print("✗ Guest or listing not found")
+        print("[error] Guest or listing not found")
         return
     
-    wishlist = Wishlist(
-        user_id=guest.id,
-        name="My Favorites",
-        description="Places I want to visit",
-    )
-    db.add(wishlist)
-    db.flush()
+    wishlist = db.query(Wishlist).filter(
+        Wishlist.user_id == guest.id,
+        Wishlist.name == "My Favorites",
+    ).first()
+
+    if not wishlist:
+        wishlist = Wishlist(
+            user_id=guest.id,
+            name="My Favorites",
+            description="Places I want to visit",
+        )
+        db.add(wishlist)
+        db.flush()
+
+    existing_item = db.query(WishlistItem).filter(
+        WishlistItem.wishlist_id == wishlist.id,
+        WishlistItem.listing_id == listing.id,
+    ).first()
+
+    if existing_item:
+        db.commit()
+        print("[ok] Wishlists seeded")
+        return
     
     wishlist_item = WishlistItem(
         wishlist_id=wishlist.id,
@@ -386,7 +406,7 @@ def seed_wishlists(db: Session):
     db.add(wishlist_item)
     
     db.commit()
-    print("✓ Wishlists seeded")
+    print("[ok] Wishlists seeded")
 
 
 def main():
@@ -407,10 +427,10 @@ def main():
         seed_reviews(db)
         seed_wishlists(db)
         
-        print("\n✓ Database seeding completed successfully!")
+        print("\n[ok] Database seeding completed successfully!")
         
     except Exception as e:
-        print(f"\n✗ Error during seeding: {e}")
+        print(f"\n[error] Error during seeding: {e}")
         db.rollback()
         raise
     finally:
