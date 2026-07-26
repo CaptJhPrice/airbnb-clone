@@ -45,6 +45,10 @@ class ListingImageBase(BaseModel):
     order: int = 0
 
 
+class ListingImageCreate(ListingImageBase):
+    pass
+
+
 class ListingImageResponse(ListingImageBase):
     model_config = ConfigDict(from_attributes=True)
 

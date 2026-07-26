@@ -29,5 +29,5 @@ class BookingResponse(BookingBase):
 
 
 class BookingDetail(BookingResponse):
-    listing: dict
-    guest: dict
+    listing: Optional[dict] = None
+    guest: Optional[dict] = None
