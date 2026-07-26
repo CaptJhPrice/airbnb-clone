@@ -97,12 +97,8 @@ Status legend:
 - [~] Taxes
   - UI says total before taxes.
   - Dedicated tax calculation pending.
-- [~] Guest count validation
-  - Frontend constrains guests.
-  - Backend max-guests enforcement should be added.
-- [~] Past date validation
-  - Frontend prevents past dates.
-  - Backend validation should be added.
+- [x] Guest count validation
+- [x] Past date validation
 - [~] Availability calendar / blocked dates
   - Booking overlap prevention exists.
   - Dedicated availability table checks pending.
@@ -149,4 +145,4 @@ Status legend:
 
 ## Recommended Next Milestone
 
-Add backend validation for past dates and max guest count, then build the host bookings/availability management screen.
+Build the host bookings/availability management screen.

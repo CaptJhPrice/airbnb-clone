@@ -122,6 +122,34 @@ def test_booking_prevents_overlapping_reservations():
         delete_listing(listing_id)
 
 
+def test_booking_rejects_past_dates_and_too_many_guests():
+    listing = create_temp_listing("Temporary Validation Test Apartment")
+    listing_id = listing["id"]
+
+    try:
+        past_payload = {
+            "listing_id": listing_id,
+            "check_in": (datetime.now() - timedelta(days=2)).isoformat(),
+            "check_out": (datetime.now() + timedelta(days=1)).isoformat(),
+            "num_guests": 1,
+        }
+        past = client.post("/api/v1/bookings/?guest_id=2", json=past_payload)
+        assert past.status_code == 400
+        assert "past" in past.json()["detail"]
+
+        guest_payload = {
+            "listing_id": listing_id,
+            "check_in": (datetime.now() + timedelta(days=60)).isoformat(),
+            "check_out": (datetime.now() + timedelta(days=63)).isoformat(),
+            "num_guests": 99,
+        }
+        too_many_guests = client.post("/api/v1/bookings/?guest_id=2", json=guest_payload)
+        assert too_many_guests.status_code == 400
+        assert "guest count" in too_many_guests.json()["detail"]
+    finally:
+        delete_listing(listing_id)
+
+
 def test_booking_detail_and_listing_routes_are_serialized():
     detail = client.get("/api/v1/bookings/1")
     assert detail.status_code == 200

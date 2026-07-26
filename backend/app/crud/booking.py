@@ -54,6 +54,9 @@ def calculate_price(
     listing = db.query(Listing).filter(Listing.id == listing_id).first()
     if not listing:
         return None
+
+    if num_guests > listing.max_guests:
+        return None
     
     nights = (check_out - check_in).days
     if nights <= 0:
@@ -75,6 +78,9 @@ def calculate_price(
 
 def create_booking(db: Session, booking: BookingCreate, guest_id: int) -> Booking:
     """Create a new booking."""
+    if booking.check_in < datetime.now():
+        raise ValueError("Check-in date cannot be in the past")
+
     # Calculate price
     price_info = calculate_price(
         db,
@@ -85,7 +91,7 @@ def create_booking(db: Session, booking: BookingCreate, guest_id: int) -> Bookin
     )
     
     if not price_info:
-        raise ValueError("Invalid booking parameters")
+        raise ValueError("Invalid booking parameters or guest count exceeds listing capacity")
     
     # Check availability
     if not check_availability(
