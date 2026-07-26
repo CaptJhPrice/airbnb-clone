@@ -10,6 +10,8 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@emnapi/core": "^1.11.3",
+    "@emnapi/runtime": "^1.11.3",
     "@hookform/resolvers": "^5.5.7",
     "@tanstack/react-query": "^5.101.4",
     "axios": "^1.18.1",
