@@ -1,3 +1,5 @@
+export type UserRole = "guest" | "host" | "admin";
+
 export type Category = {
   id: number;
   name: string;
@@ -21,6 +23,22 @@ export type ListingImage = {
   is_primary: boolean;
   order: number;
   created_at: string;
+};
+
+export type Availability = {
+  id: number;
+  listing_id: number;
+  date: string;
+  is_available: boolean;
+  price?: number | null;
+  created_at: string;
+};
+
+export type AvailabilityBatchPayload = {
+  start_date: string;
+  end_date: string;
+  is_available: boolean;
+  price?: number | null;
 };
 
 export type Listing = {
@@ -126,7 +144,11 @@ export type ListingFilters = {
   max_price?: number;
   min_guests?: number;
   property_type?: string;
+  amenity_ids?: string;
+  min_rating?: number;
   sort_by?: string;
+  skip?: number;
+  limit?: number;
 };
 
 export type BookingPayload = {

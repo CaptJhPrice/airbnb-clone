@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.database import engine, Base
-from app.api.v1 import auth, users, listings, bookings, reviews, wishlists
+from app.api.v1 import auth, users, listings, bookings, reviews, wishlists, availability
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -26,6 +26,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix=settings.API_V1_STR + "/auth", tags=["Authentication"])
 app.include_router(users.router, prefix=settings.API_V1_STR + "/users", tags=["Users"])
 app.include_router(listings.router, prefix=settings.API_V1_STR + "/listings", tags=["Listings"])
+app.include_router(availability.router, prefix=settings.API_V1_STR + "/availability", tags=["Availability"])
 app.include_router(bookings.router, prefix=settings.API_V1_STR + "/bookings", tags=["Bookings"])
 app.include_router(reviews.router, prefix=settings.API_V1_STR + "/reviews", tags=["Reviews"])
 app.include_router(wishlists.router, prefix=settings.API_V1_STR + "/wishlists", tags=["Wishlists"])

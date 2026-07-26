@@ -1,9 +1,6 @@
-from datetime import datetime, timedelta
-
+from datetime import datetime, timedelta, date
 from fastapi.testclient import TestClient
-
 from main import app
-
 
 client = TestClient(app)
 
@@ -32,7 +29,7 @@ def listing_payload(title="Temporary Test Apartment"):
                 "order": 0,
             }
         ],
-        "amenity_ids": [],
+        "amenity_ids": [1],
     }
 
 
@@ -69,6 +66,13 @@ def test_listing_filters_and_sorting():
     assert all(item["location_city"] == "Miami" for item in filtered.json())
 
 
+def test_amenities_and_rating_filter():
+    response = client.get("/api/v1/listings/?amenity_ids=1&min_rating=4.0")
+    assert response.status_code == 200
+    listings = response.json()
+    assert isinstance(listings, list)
+
+
 def test_invalid_sort_is_rejected():
     response = client.get("/api/v1/listings/?sort_by=bad")
     assert response.status_code == 422
@@ -95,6 +99,68 @@ def test_host_listing_crud():
         )
         assert update.status_code == 200
         assert update.json()["title"] == "Updated CRUD Test Apartment"
+    finally:
+        delete_listing(listing_id)
+
+
+def test_availability_and_blocked_booking():
+    listing = create_temp_listing("Temporary Availability Test Apartment")
+    listing_id = listing["id"]
+    start_date = (date.today() + timedelta(days=10)).isoformat()
+    end_date = (date.today() + timedelta(days=11)).isoformat()
+
+    try:
+        # Set availability to blocked for 2 days
+        batch = {
+            "start_date": start_date,
+            "end_date": end_date,
+            "is_available": False,
+            "price": 250.0
+        }
+        res = client.post(f"/api/v1/availability/listings/{listing_id}?host_id=1", json=batch)
+        assert res.status_code == 200
+        avail_items = res.json()
+        assert len(avail_items) == 2
+
+        # Query availability
+        get_res = client.get(f"/api/v1/availability/listings/{listing_id}?start_date={start_date}&end_date={end_date}")
+        assert get_res.status_code == 200
+        assert len(get_res.json()) == 2
+
+        # Attempt to book blocked dates should fail
+        check_in = datetime.strptime(start_date, "%Y-%m-%d")
+        check_out = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1)
+        booking_res = client.post("/api/v1/bookings/?guest_id=2", json={
+            "listing_id": listing_id,
+            "check_in": check_in.isoformat(),
+            "check_out": check_out.isoformat(),
+            "num_guests": 1,
+        })
+        assert booking_res.status_code == 400
+        assert "not available" in booking_res.json()["detail"]
+    finally:
+        delete_listing(listing_id)
+
+
+def test_photo_management():
+    listing = create_temp_listing("Temporary Photo Test Apartment")
+    listing_id = listing["id"]
+
+    try:
+        # Add photo
+        photo_res = client.post(f"/api/v1/listings/{listing_id}/images?host_id=1", json={
+            "url": "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200",
+            "alt_text": "Extra bedroom",
+            "is_primary": False,
+            "order": 1
+        })
+        assert photo_res.status_code == 201
+        image_data = photo_res.json()
+        image_id = image_data["id"]
+
+        # Delete photo
+        del_res = client.delete(f"/api/v1/listings/{listing_id}/images/{image_id}?host_id=1")
+        assert del_res.status_code == 204
     finally:
         delete_listing(listing_id)
 

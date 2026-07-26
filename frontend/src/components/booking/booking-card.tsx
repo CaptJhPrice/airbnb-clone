@@ -12,8 +12,8 @@ import { formatCurrency, nightsBetween } from "@/lib/utils";
 
 const bookingSchema = z
   .object({
-    check_in: z.string().min(1, "Check-in is required"),
-    check_out: z.string().min(1, "Checkout is required"),
+    check_in: z.string().min(1, "Check-in date is required"),
+    check_out: z.string().min(1, "Checkout date is required"),
     num_guests: z.coerce.number().int().min(1, "At least one guest is required"),
     special_requests: z.string().optional(),
   })
@@ -22,7 +22,7 @@ const bookingSchema = z
     path: ["check_out"],
   })
   .refine((value) => new Date(value.check_in) >= new Date(new Date().toDateString()), {
-    message: "Check-in cannot be in the past",
+    message: "Check-in date cannot be in the past",
     path: ["check_in"],
   });
 
@@ -46,7 +46,9 @@ export function BookingCard({ listing }: { listing: ListingDetail }) {
   const nights = checkIn && checkOut ? nightsBetween(checkIn, checkOut) : 0;
   const basePrice = nights * listing.price_per_night;
   const serviceFee = basePrice * 0.12;
-  const total = basePrice + listing.cleaning_fee + serviceFee;
+  const subtotal = basePrice + listing.cleaning_fee + serviceFee;
+  const tax = subtotal * 0.10; // 10% tax rate
+  const total = subtotal + tax;
 
   const mutation = useMutation({
     mutationFn: (values: BookingForm) =>
@@ -57,7 +59,10 @@ export function BookingCard({ listing }: { listing: ListingDetail }) {
         num_guests: values.num_guests,
         special_requests: values.special_requests,
       }),
-    onSuccess: () => toast.success("Booking request created"),
+    onSuccess: () => toast.success("Booking reservation confirmed!"),
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.detail || "Booking failed. Dates may be unavailable.");
+    },
   });
 
   return (
@@ -68,7 +73,7 @@ export function BookingCard({ listing }: { listing: ListingDetail }) {
           <span className="text-neutral-600"> night</span>
         </p>
         <p className="flex items-center gap-1 text-sm">
-          <Star size={14} className="fill-current" />
+          <Star size={14} className="fill-current text-amber-500" />
           <span className="font-semibold">{listing.average_rating?.toFixed(2) ?? "New"}</span>
           <span className="text-neutral-500">({listing.review_count})</span>
         </p>
@@ -78,15 +83,15 @@ export function BookingCard({ listing }: { listing: ListingDetail }) {
         <div className="grid grid-cols-2 overflow-hidden rounded-xl border border-neutral-300">
           <label className="border-r border-neutral-300 p-3">
             <span className="text-[10px] font-bold uppercase">Check-in</span>
-            <input type="date" className="mt-1 w-full text-sm outline-none" {...register("check_in")} />
+            <input type="date" className="mt-1 w-full text-sm outline-none bg-transparent" {...register("check_in")} />
           </label>
           <label className="p-3">
             <span className="text-[10px] font-bold uppercase">Checkout</span>
-            <input type="date" className="mt-1 w-full text-sm outline-none" {...register("check_out")} />
+            <input type="date" className="mt-1 w-full text-sm outline-none bg-transparent" {...register("check_out")} />
           </label>
           <label className="col-span-2 border-t border-neutral-300 p-3">
             <span className="text-[10px] font-bold uppercase">Guests</span>
-            <input type="number" min="1" max={listing.max_guests} className="mt-1 w-full text-sm outline-none" {...register("num_guests")} />
+            <input type="number" min="1" max={listing.max_guests} className="mt-1 w-full text-sm outline-none bg-transparent" {...register("num_guests")} />
           </label>
         </div>
 
@@ -125,11 +130,15 @@ export function BookingCard({ listing }: { listing: ListingDetail }) {
             <span>{formatCurrency(listing.cleaning_fee)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="underline">Service fee</span>
+            <span className="underline">Service fee (12%)</span>
             <span>{formatCurrency(serviceFee)}</span>
           </div>
-          <div className="flex justify-between border-t border-neutral-200 pt-4 font-bold">
-            <span>Total before taxes</span>
+          <div className="flex justify-between">
+            <span className="underline">Estimated taxes (10%)</span>
+            <span>{formatCurrency(tax)}</span>
+          </div>
+          <div className="flex justify-between border-t border-neutral-200 pt-4 font-bold text-base">
+            <span>Total</span>
             <span>{formatCurrency(total)}</span>
           </div>
         </div>

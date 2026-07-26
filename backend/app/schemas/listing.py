@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, date
 from app.models.listing import PropertyType
 
 
@@ -49,6 +49,31 @@ class ListingImageResponse(ListingImageBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    created_at: datetime
+
+
+class AvailabilityBase(BaseModel):
+    date: date
+    is_available: bool = True
+    price: Optional[float] = None
+
+
+class AvailabilityCreate(AvailabilityBase):
+    pass
+
+
+class AvailabilityBatchCreate(BaseModel):
+    start_date: date
+    end_date: date
+    is_available: bool = True
+    price: Optional[float] = None
+
+
+class AvailabilityResponse(AvailabilityBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    listing_id: int
     created_at: datetime
 
 

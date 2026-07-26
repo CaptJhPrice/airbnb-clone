@@ -4,13 +4,15 @@ from typing import List, Optional
 from app.core.database import get_db
 from app.schemas.listing import (
     ListingCreate, ListingUpdate, ListingResponse, ListingDetail,
-    CategoryCreate, CategoryResponse, AmenityCreate, AmenityResponse
+    CategoryCreate, CategoryResponse, AmenityCreate, AmenityResponse,
+    ListingImageBase, ListingImageResponse
 )
 from app.crud.listing import (
     get_listing, get_listings, get_listings_by_host,
     create_listing, update_listing, delete_listing,
     get_categories, get_category, create_category,
-    get_amenities, get_amenity, create_amenity
+    get_amenities, get_amenity, create_amenity,
+    add_listing_image, delete_listing_image
 )
 from app.crud.review import get_listing_rating
 
@@ -45,6 +47,10 @@ def create_new_amenity(amenity: AmenityCreate, db: Session = Depends(get_db)):
 def get_host_listings(host_id: int, db: Session = Depends(get_db)):
     """Get all listings by a host."""
     listings = get_listings_by_host(db, host_id)
+    for listing in listings:
+        rating_info = get_listing_rating(db, listing.id)
+        listing.average_rating = rating_info["average_rating"]
+        listing.review_count = rating_info["review_count"]
     return listings
 
 
@@ -58,10 +64,19 @@ def get_all_listings(
     max_price: Optional[float] = None,
     min_guests: Optional[int] = None,
     property_type: Optional[str] = None,
+    amenity_ids: Optional[str] = Query(None, description="Comma separated amenity IDs, e.g. 1,2,3"),
+    min_rating: Optional[float] = Query(None, ge=0.0, le=5.0),
     sort_by: Optional[str] = Query(None, pattern="^(recommended|price_asc|price_desc|newest)$"),
     db: Session = Depends(get_db)
 ):
     """Get all listings with optional filters."""
+    parsed_amenity_ids = None
+    if amenity_ids:
+        try:
+            parsed_amenity_ids = [int(a.strip()) for a in amenity_ids.split(",") if a.strip()]
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid amenity_ids format")
+
     listings = get_listings(
         db,
         skip=skip,
@@ -72,6 +87,8 @@ def get_all_listings(
         max_price=max_price,
         min_guests=min_guests,
         property_type=property_type,
+        amenity_ids=parsed_amenity_ids,
+        min_rating=min_rating,
         sort_by=sort_by,
     )
     
@@ -144,7 +161,7 @@ def get_listing_detail(listing_id: int, db: Session = Depends(get_db)):
 @router.post("/", response_model=ListingResponse, status_code=status.HTTP_201_CREATED)
 def create_new_listing(
     listing: ListingCreate,
-    host_id: int,
+    host_id: int = Query(...),
     db: Session = Depends(get_db)
 ):
     """Create a new listing."""
@@ -156,7 +173,7 @@ def create_new_listing(
 def update_existing_listing(
     listing_id: int,
     listing_update: ListingUpdate,
-    host_id: int,
+    host_id: int = Query(...),
     db: Session = Depends(get_db)
 ):
     """Update a listing."""
@@ -180,7 +197,7 @@ def update_existing_listing(
 @router.delete("/{listing_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_existing_listing(
     listing_id: int,
-    host_id: int,
+    host_id: int = Query(...),
     db: Session = Depends(get_db)
 ):
     """Delete a listing."""
@@ -198,4 +215,37 @@ def delete_existing_listing(
         )
     
     delete_listing(db, listing_id)
+    return None
+
+
+@router.post("/{listing_id}/images", response_model=ListingImageResponse, status_code=status.HTTP_201_CREATED)
+def add_image_to_listing(
+    listing_id: int,
+    image: ListingImageBase,
+    host_id: int = Query(...),
+    db: Session = Depends(get_db)
+):
+    """Add a new image to a listing."""
+    db_listing = get_listing(db, listing_id)
+    if not db_listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    if db_listing.host_id != host_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    return add_listing_image(db, listing_id, image)
+
+
+@router.delete("/{listing_id}/images/{image_id}", status_code=status.HTTP_204_NO_CONTENT)
+def remove_image_from_listing(
+    listing_id: int,
+    image_id: int,
+    host_id: int = Query(...),
+    db: Session = Depends(get_db)
+):
+    """Delete an image from a listing."""
+    db_listing = get_listing(db, listing_id)
+    if not db_listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    if db_listing.host_id != host_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    delete_listing_image(db, image_id)
     return None

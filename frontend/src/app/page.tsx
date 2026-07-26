@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { FilterBar } from "@/components/listings/filter-bar";
-import { ListingGrid } from "@/components/listings/listing-grid";
+import { HomeListingView } from "@/components/listings/HomeListingView";
 import { getCategories, getListings } from "@/lib/api";
 import type { ListingFilters } from "@/lib/types";
 
@@ -23,6 +23,8 @@ export default async function Home({ searchParams }: HomePageProps) {
     min_price: firstParam(params.min_price) ? Number(firstParam(params.min_price)) : undefined,
     max_price: firstParam(params.max_price) ? Number(firstParam(params.max_price)) : undefined,
     property_type: firstParam(params.property_type),
+    amenity_ids: firstParam(params.amenity_ids),
+    min_rating: firstParam(params.min_rating) ? Number(firstParam(params.min_rating)) : undefined,
     sort_by: firstParam(params.sort_by),
   };
 
@@ -40,17 +42,17 @@ export default async function Home({ searchParams }: HomePageProps) {
               Homes guests love
             </h1>
             <p className="mt-2 text-neutral-600">
-              Explore stays with real API data, responsive cards, filters, and booking-ready detail pages.
+              Explore stays with real API data, responsive cards, interactive map view, filters, and booking-ready detail pages.
             </p>
           </div>
-          <div className="rounded-full border border-neutral-200 px-4 py-2 text-sm font-semibold shadow-sm">
+          <div className="rounded-full border border-neutral-200 px-4 py-2 text-sm font-semibold shadow-sm bg-neutral-50">
             Display total before taxes
           </div>
         </div>
         <Suspense>
           <FilterBar filters={filters} resultCount={listings.length} />
         </Suspense>
-        <ListingGrid listings={listings} />
+        <HomeListingView listings={listings} />
       </main>
       <SiteFooter />
     </>

@@ -1,13 +1,13 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
-from typing import List
+from typing import List, Optional
 from datetime import datetime, timedelta
 from app.models.booking import Booking
-from app.models.listing import Listing
+from app.models.listing import Listing, Availability
 from app.schemas.booking import BookingCreate
 
 
-def get_booking(db: Session, booking_id: int) -> Booking:
+def get_booking(db: Session, booking_id: int) -> Optional[Booking]:
     """Get a booking by ID."""
     return db.query(Booking).filter(Booking.id == booking_id).first()
 
@@ -29,8 +29,8 @@ def check_availability(
     check_out: datetime,
 ) -> bool:
     """Check if a listing is available for the given dates."""
-    # Check for overlapping confirmed bookings
-    overlapping = db.query(Booking).filter(
+    # Check for overlapping confirmed or pending bookings
+    overlapping_booking = db.query(Booking).filter(
         Booking.listing_id == listing_id,
         Booking.status.in_(["confirmed", "pending"]),
         or_(
@@ -40,7 +40,21 @@ def check_availability(
         ),
     ).first()
     
-    return overlapping is None
+    if overlapping_booking:
+        return False
+
+    # Check for host-blocked dates in Availability table
+    check_in_date = check_in.date() if isinstance(check_in, datetime) else check_in
+    check_out_date = check_out.date() if isinstance(check_out, datetime) else check_out
+    
+    blocked_avail = db.query(Availability).filter(
+        Availability.listing_id == listing_id,
+        Availability.is_available == False,
+        Availability.date >= check_in_date,
+        Availability.date < check_out_date
+    ).first()
+
+    return blocked_avail is None
 
 
 def calculate_price(
@@ -49,8 +63,8 @@ def calculate_price(
     check_in: datetime,
     check_out: datetime,
     num_guests: int,
-) -> dict:
-    """Calculate total price for a booking."""
+) -> Optional[dict]:
+    """Calculate total price for a booking including taxes and custom night rates if set."""
     listing = db.query(Listing).filter(Listing.id == listing_id).first()
     if not listing:
         return None
@@ -62,17 +76,37 @@ def calculate_price(
     if nights <= 0:
         return None
     
-    base_price = listing.price_per_night * nights
+    # Calculate base price, checking if custom prices exist for specific dates
+    check_in_date = check_in.date() if isinstance(check_in, datetime) else check_in
+    custom_availabilities = {
+        avail.date: avail.price
+        for avail in db.query(Availability).filter(
+            Availability.listing_id == listing_id,
+            Availability.date >= check_in_date,
+            Availability.date < (check_in_date + timedelta(days=nights))
+        ).all()
+        if avail.price is not None
+    }
+    
+    base_price = 0.0
+    for i in range(nights):
+        day_date = check_in_date + timedelta(days=i)
+        base_price += custom_availabilities.get(day_date, listing.price_per_night)
+
     cleaning_fee = listing.cleaning_fee
     service_fee = base_price * 0.12  # 12% service fee
-    total_price = base_price + cleaning_fee + service_fee
+    subtotal = base_price + cleaning_fee + service_fee
+    tax = subtotal * 0.10  # 10% tax
+    total_price = subtotal + tax
     
     return {
         "nights": nights,
-        "base_price": base_price,
-        "cleaning_fee": cleaning_fee,
-        "service_fee": service_fee,
-        "total_price": total_price,
+        "base_price": round(base_price, 2),
+        "cleaning_fee": round(cleaning_fee, 2),
+        "service_fee": round(service_fee, 2),
+        "subtotal": round(subtotal, 2),
+        "tax": round(tax, 2),
+        "total_price": round(total_price, 2),
     }
 
 
@@ -119,7 +153,7 @@ def create_booking(db: Session, booking: BookingCreate, guest_id: int) -> Bookin
     return db_booking
 
 
-def update_booking_status(db: Session, booking_id: int, status: str) -> Booking:
+def update_booking_status(db: Session, booking_id: int, status: str) -> Optional[Booking]:
     """Update booking status."""
     db_booking = get_booking(db, booking_id)
     if db_booking:
@@ -129,6 +163,6 @@ def update_booking_status(db: Session, booking_id: int, status: str) -> Booking:
     return db_booking
 
 
-def cancel_booking(db: Session, booking_id: int) -> Booking:
+def cancel_booking(db: Session, booking_id: int) -> Optional[Booking]:
     """Cancel a booking."""
     return update_booking_status(db, booking_id, "cancelled")

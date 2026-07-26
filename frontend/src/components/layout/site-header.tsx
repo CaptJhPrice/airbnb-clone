@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { Globe2, Menu, Search, UserRound } from "lucide-react";
+import { Globe2, Menu, Search, UserRound, Shield, Check, Calendar } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
-import type { Category } from "@/lib/types";
+import { useState, useEffect } from "react";
+import type { Category, UserRole } from "@/lib/types";
+import { ThemeToggle } from "./ThemeToggle";
 
 type SiteHeaderProps = {
   categories?: Category[];
@@ -16,6 +17,21 @@ export function SiteHeader({ categories = [] }: SiteHeaderProps) {
   const searchParams = useSearchParams();
   const [location, setLocation] = useState(searchParams.get("location") ?? "");
   const [guests, setGuests] = useState(searchParams.get("min_guests") ?? "");
+  const [userRole, setUserRole] = useState<UserRole>("guest");
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const savedRole = localStorage.getItem("staybnb_user_role") as UserRole;
+    if (savedRole) {
+      setUserRole(savedRole);
+    }
+  }, []);
+
+  const changeRole = (role: UserRole) => {
+    setUserRole(role);
+    localStorage.setItem("staybnb_user_role", role);
+    setMenuOpen(false);
+  };
 
   function submitSearch() {
     const params = new URLSearchParams(searchParams.toString());
@@ -54,23 +70,86 @@ export function SiteHeader({ categories = [] }: SiteHeaderProps) {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-2 lg:flex">
-          <Link href="/trips" className="rounded-full px-4 py-2 text-sm font-semibold hover:bg-neutral-100">
-            Trips
-          </Link>
-          <Link href="/wishlists" className="rounded-full px-4 py-2 text-sm font-semibold hover:bg-neutral-100">
-            Wishlists
-          </Link>
-          <Link href="/host" className="rounded-full px-4 py-2 text-sm font-semibold hover:bg-neutral-100">
-            Become a host
-          </Link>
-          <button className="grid h-10 w-10 place-items-center rounded-full hover:bg-neutral-100" aria-label="Language and currency">
+        <div className="flex items-center gap-2">
+          {userRole === "guest" && (
+            <>
+              <Link href="/trips" className="hidden sm:inline-block rounded-full px-4 py-2 text-sm font-semibold hover:bg-neutral-100">
+                Trips
+              </Link>
+              <Link href="/wishlists" className="hidden sm:inline-block rounded-full px-4 py-2 text-sm font-semibold hover:bg-neutral-100">
+                Wishlists
+              </Link>
+            </>
+          )}
+
+          {(userRole === "host" || userRole === "admin") && (
+            <>
+              <Link href="/host" className="rounded-full px-4 py-2 text-sm font-semibold hover:bg-neutral-100">
+                Host Dashboard
+              </Link>
+              <Link href="/host/availability" className="hidden md:flex items-center gap-1 rounded-full px-4 py-2 text-sm font-semibold hover:bg-neutral-100">
+                <Calendar className="w-4 h-4 text-rose-500" /> Availability
+              </Link>
+            </>
+          )}
+
+          <button className="hidden sm:grid h-10 w-10 place-items-center rounded-full hover:bg-neutral-100" aria-label="Language and currency">
             <Globe2 size={18} />
           </button>
-          <button className="flex h-11 items-center gap-3 rounded-full border border-neutral-300 px-3 shadow-sm transition hover:shadow-md" aria-label="Open profile menu">
-            <Menu size={18} />
-            <UserRound size={22} />
-          </button>
+          <ThemeToggle />
+
+          {/* Profile Dropdown with Role Switching */}
+          <div className="relative">
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="flex h-11 items-center gap-3 rounded-full border border-neutral-300 px-3 shadow-sm transition hover:shadow-md bg-white"
+              aria-label="Open profile menu"
+            >
+              <Menu size={18} />
+              <div className="relative">
+                <UserRound size={22} />
+                <span className={`absolute -bottom-1 -right-1 w-2.5 h-2.5 rounded-full border border-white ${
+                  userRole === "host" ? "bg-amber-500" : userRole === "admin" ? "bg-purple-600" : "bg-emerald-500"
+                }`} />
+              </div>
+            </button>
+
+            {menuOpen && (
+              <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white p-2 shadow-xl border border-neutral-200 z-50 text-sm">
+                <div className="px-3 py-2 border-b border-neutral-100">
+                  <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Role Persona</p>
+                  <p className="font-bold text-slate-900 capitalize flex items-center gap-1.5 mt-0.5">
+                    <Shield className="w-4 h-4 text-rose-500" /> {userRole} mode
+                  </p>
+                </div>
+
+                <div className="py-1">
+                  {(["guest", "host", "admin"] as UserRole[]).map((r) => (
+                    <button
+                      key={r}
+                      onClick={() => changeRole(r)}
+                      className="w-full text-left px-3 py-2 rounded-xl flex items-center justify-between hover:bg-neutral-100 transition capitalize font-medium"
+                    >
+                      <span>Switch to {r}</span>
+                      {userRole === r && <Check className="w-4 h-4 text-rose-600" />}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="border-t border-neutral-100 pt-1">
+                  <Link href="/trips" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-xl hover:bg-neutral-100 font-medium">
+                    Trips
+                  </Link>
+                  <Link href="/wishlists" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-xl hover:bg-neutral-100 font-medium">
+                    Wishlists
+                  </Link>
+                  <Link href="/host" onClick={() => setMenuOpen(false)} className="block px-3 py-2 rounded-xl hover:bg-neutral-100 font-medium">
+                    Host Dashboard
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
