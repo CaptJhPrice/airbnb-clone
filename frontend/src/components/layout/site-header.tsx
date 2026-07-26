@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { Globe2, Menu, Search, UserRound, Shield, Check, Calendar, LogOut, UserCheck } from "lucide-react";
-import { motion } from "framer-motion";
+import { Globe2, Menu, UserRound, Check, Calendar, LogOut, UserCheck } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import type { Category, UserRole } from "@/lib/types";
 import { ThemeToggle } from "./ThemeToggle";
 import { AuthModal } from "./AuthModal";
+import { AirbnbSearchBar } from "./AirbnbSearchBar";
 import toast from "react-hot-toast";
 
 type SiteHeaderProps = {
@@ -17,8 +17,6 @@ type SiteHeaderProps = {
 export function SiteHeader({ categories = [] }: SiteHeaderProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [location, setLocation] = useState(searchParams.get("location") ?? "");
-  const [guests, setGuests] = useState(searchParams.get("min_guests") ?? "");
   const [userRole, setUserRole] = useState<UserRole>("guest");
   const [currentUser, setCurrentUser] = useState<{ name: string; email: string; role: UserRole } | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -50,7 +48,6 @@ export function SiteHeader({ categories = [] }: SiteHeaderProps) {
     }
     setMenuOpen(false);
 
-    // Automatic Navigation on Role Change
     if (role === "host") {
       toast.success("Switched to Host Mode");
       router.push("/host");
@@ -77,15 +74,6 @@ export function SiteHeader({ categories = [] }: SiteHeaderProps) {
       router.push("/host");
     }
   };
-
-  function submitSearch() {
-    const params = new URLSearchParams(searchParams.toString());
-    if (location.trim()) params.set("location", location.trim());
-    else params.delete("location");
-    if (guests) params.set("min_guests", guests);
-    else params.delete("min_guests");
-    router.push(`/?${params.toString()}`);
-  }
 
   function selectCategory(categoryId?: number) {
     const params = new URLSearchParams(searchParams.toString());
@@ -225,49 +213,9 @@ export function SiteHeader({ categories = [] }: SiteHeaderProps) {
           </div>
         </div>
 
-        {/* Search Bar */}
+        {/* Enhanced Airbnb Search Bar Component */}
         <div className="mx-auto max-w-[920px] px-4 pb-4">
-          <motion.div
-            initial={{ y: -8, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="grid grid-cols-1 overflow-hidden rounded-full border border-neutral-200 bg-white shadow-[0_8px_28px_rgba(0,0,0,0.12)] md:grid-cols-[1.15fr_0.9fr_0.8fr_auto] dark:bg-slate-800 dark:border-slate-700"
-          >
-            <label className="group px-7 py-3 hover:bg-neutral-50 dark:hover:bg-slate-700">
-              <span className="block text-xs font-bold">Where</span>
-              <input
-                value={location}
-                onChange={(event) => setLocation(event.target.value)}
-                onKeyDown={(event) => event.key === "Enter" && submitSearch()}
-                placeholder="Search destinations"
-                className="mt-1 w-full bg-transparent text-sm text-neutral-700 dark:text-slate-200 outline-none placeholder:text-neutral-400"
-              />
-            </label>
-            <div className="border-t border-neutral-200 dark:border-slate-700 px-7 py-3 hover:bg-neutral-50 dark:hover:bg-slate-700 md:border-l md:border-t-0">
-              <span className="block text-xs font-bold">When</span>
-              <span className="mt-1 block text-sm text-neutral-500">Add dates</span>
-            </div>
-            <label className="border-t border-neutral-200 dark:border-slate-700 px-7 py-3 hover:bg-neutral-50 dark:hover:bg-slate-700 md:border-l md:border-t-0">
-              <span className="block text-xs font-bold">Who</span>
-              <input
-                value={guests}
-                onChange={(event) => setGuests(event.target.value)}
-                type="number"
-                min="1"
-                max="16"
-                placeholder="Add guests"
-                className="mt-1 w-full bg-transparent text-sm text-neutral-700 dark:text-slate-200 outline-none placeholder:text-neutral-400"
-              />
-            </label>
-            <div className="flex items-center justify-end p-2">
-              <button
-                onClick={submitSearch}
-                className="grid h-12 w-12 place-items-center rounded-full bg-[#ff385c] text-white transition hover:bg-[#e31c5f]"
-                aria-label="Search"
-              >
-                <Search size={19} />
-              </button>
-            </div>
-          </motion.div>
+          <AirbnbSearchBar />
         </div>
 
         {/* Categories Bar */}
