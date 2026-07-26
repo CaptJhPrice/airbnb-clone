@@ -2,13 +2,13 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0f172a;
   --airbnb-red: #ff385c;
 }
 
 .dark {
   --background: #0b0f17;
-  --foreground: #f8fafc;
+  --foreground: #ffffff;
 }
 
 @theme inline {
@@ -19,44 +19,89 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background-color: #ffffff;
+  color: #0f172a;
   font-family: Arial, Helvetica, sans-serif;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+/* Enforce Perfect Text Readability in Dark Mode */
 .dark body {
-  background-color: #0b0f17;
-  color: #f8fafc;
+  background-color: #0b0f17 !important;
+  color: #ffffff !important;
 }
 
-/* Precise Dark Mode Typography & Contrast Fixes */
 .dark h1,
 .dark h2,
 .dark h3,
 .dark h4,
 .dark h5,
-.dark h6 {
-  color: #f8fafc;
-}
-
+.dark h6,
 .dark p,
 .dark span,
-.dark label {
-  color: #cbd5e1;
+.dark label,
+.dark div,
+.dark strong,
+.dark b,
+.dark a,
+.dark button,
+.dark input,
+.dark textarea,
+.dark select,
+.dark legend,
+.dark li,
+.dark article {
+  color: #ffffff !important;
+}
+
+/* Secondary muted text in dark mode */
+.dark .text-slate-500,
+.dark .text-slate-600,
+.dark .text-neutral-500,
+.dark .text-neutral-600,
+.dark .text-neutral-700,
+.dark .text-slate-400 {
+  color: #cbd5e1 !important;
+}
+
+/* Dark Mode Card Backgrounds & Borders */
+.dark .bg-white {
+  background-color: #111827 !important;
+}
+
+.dark .bg-slate-50,
+.dark .bg-neutral-50 {
+  background-color: #1f2937 !important;
+}
+
+.dark .border-slate-200,
+.dark .border-slate-300,
+.dark .border-neutral-200,
+.dark .border-neutral-300 {
+  border-color: #374151 !important;
 }
 
 .dark input,
 .dark textarea,
 .dark select {
-  background-color: #1e293b;
-  color: #f8fafc;
-  border-color: #334155;
+  background-color: #1e293b !important;
+  color: #ffffff !important;
+  border-color: #475569 !important;
 }
 
 .dark input::placeholder,
 .dark textarea::placeholder {
-  color: #64748b;
+  color: #94a3b8 !important;
+}
+
+/* Light mode text contrast guarantees */
+body:not(.dark) h1,
+body:not(.dark) h2,
+body:not(.dark) h3,
+body:not(.dark) h4,
+body:not(.dark) h5,
+body:not(.dark) h6 {
+  color: #0f172a;
 }
 
 button,

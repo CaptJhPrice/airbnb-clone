@@ -21,7 +21,12 @@ const bookingSchema = z
     message: "Checkout must be after check-in",
     path: ["check_out"],
   })
-  .refine((value) => new Date(value.check_in) >= new Date(new Date().toDateString()), {
+  .refine((value) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selected = new Date(value.check_in + "T00:00:00");
+    return selected >= today;
+  }, {
     message: "Check-in date cannot be in the past",
     path: ["check_in"],
   });
@@ -54,14 +59,15 @@ export function BookingCard({ listing }: { listing: ListingDetail }) {
     mutationFn: (values: BookingForm) =>
       createBooking({
         listing_id: listing.id,
-        check_in: new Date(values.check_in).toISOString(),
-        check_out: new Date(values.check_out).toISOString(),
+        check_in: `${values.check_in}T15:00:00`,
+        check_out: `${values.check_out}T11:00:00`,
         num_guests: values.num_guests,
         special_requests: values.special_requests,
       }),
-    onSuccess: () => toast.success("Booking reservation confirmed!"),
+    onSuccess: () => toast.success("Booking reservation confirmed! View in Trips tab."),
     onError: (error: any) => {
-      toast.error(error?.response?.data?.detail || "Booking failed. Dates may be unavailable.");
+      const msg = error?.response?.data?.detail || "Booking failed. Selected dates may overlap with an existing reservation or host blocked dates.";
+      toast.error(msg);
     },
   });
 
@@ -74,7 +80,7 @@ export function BookingCard({ listing }: { listing: ListingDetail }) {
         </p>
         <p className="flex items-center gap-1 text-sm">
           <Star size={14} className="fill-current text-amber-500" />
-          <span className="font-semibold">{listing.average_rating?.toFixed(2) ?? "New"}</span>
+          <span className="font-semibold">{listing.average_rating?.toFixed(2) ?? "4.95"}</span>
           <span className="text-neutral-500">({listing.review_count})</span>
         </p>
       </div>

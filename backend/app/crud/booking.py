@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 from typing import List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from app.models.booking import Booking
 from app.models.listing import Listing, Availability
 from app.schemas.booking import BookingCreate
@@ -22,6 +22,13 @@ def get_bookings_by_listing(db: Session, listing_id: int) -> List[Booking]:
     return db.query(Booking).filter(Booking.listing_id == listing_id).all()
 
 
+def make_naive(dt: datetime) -> datetime:
+    """Ensure datetime is timezone naive for consistent SQLite comparisons."""
+    if isinstance(dt, datetime) and dt.tzinfo is not None:
+        return dt.replace(tzinfo=None)
+    return dt
+
+
 def check_availability(
     db: Session,
     listing_id: int,
@@ -29,14 +36,17 @@ def check_availability(
     check_out: datetime,
 ) -> bool:
     """Check if a listing is available for the given dates."""
+    check_in_naive = make_naive(check_in)
+    check_out_naive = make_naive(check_out)
+
     # Check for overlapping confirmed or pending bookings
     overlapping_booking = db.query(Booking).filter(
         Booking.listing_id == listing_id,
         Booking.status.in_(["confirmed", "pending"]),
         or_(
-            and_(Booking.check_in <= check_in, Booking.check_out > check_in),
-            and_(Booking.check_in < check_out, Booking.check_out >= check_out),
-            and_(Booking.check_in >= check_in, Booking.check_out <= check_out),
+            and_(Booking.check_in <= check_in_naive, Booking.check_out > check_in_naive),
+            and_(Booking.check_in < check_out_naive, Booking.check_out >= check_out_naive),
+            and_(Booking.check_in >= check_in_naive, Booking.check_out <= check_out_naive),
         ),
     ).first()
     
@@ -44,8 +54,8 @@ def check_availability(
         return False
 
     # Check for host-blocked dates in Availability table
-    check_in_date = check_in.date() if isinstance(check_in, datetime) else check_in
-    check_out_date = check_out.date() if isinstance(check_out, datetime) else check_out
+    check_in_date = check_in_naive.date() if isinstance(check_in_naive, datetime) else check_in_naive
+    check_out_date = check_out_naive.date() if isinstance(check_out_naive, datetime) else check_out_naive
     
     blocked_avail = db.query(Availability).filter(
         Availability.listing_id == listing_id,
@@ -72,12 +82,15 @@ def calculate_price(
     if num_guests > listing.max_guests:
         return None
     
-    nights = (check_out - check_in).days
+    check_in_naive = make_naive(check_in)
+    check_out_naive = make_naive(check_out)
+
+    nights = (check_out_naive - check_in_naive).days
     if nights <= 0:
         return None
     
     # Calculate base price, checking if custom prices exist for specific dates
-    check_in_date = check_in.date() if isinstance(check_in, datetime) else check_in
+    check_in_date = check_in_naive.date()
     custom_availabilities = {
         avail.date: avail.price
         for avail in db.query(Availability).filter(
@@ -112,15 +125,19 @@ def calculate_price(
 
 def create_booking(db: Session, booking: BookingCreate, guest_id: int) -> Booking:
     """Create a new booking."""
-    if booking.check_in < datetime.now():
+    check_in_naive = make_naive(booking.check_in)
+    check_out_naive = make_naive(booking.check_out)
+
+    today_date = date.today()
+    if check_in_naive.date() < today_date:
         raise ValueError("Check-in date cannot be in the past")
 
     # Calculate price
     price_info = calculate_price(
         db,
         booking.listing_id,
-        booking.check_in,
-        booking.check_out,
+        check_in_naive,
+        check_out_naive,
         booking.num_guests,
     )
     
@@ -131,16 +148,16 @@ def create_booking(db: Session, booking: BookingCreate, guest_id: int) -> Bookin
     if not check_availability(
         db,
         booking.listing_id,
-        booking.check_in,
-        booking.check_out,
+        check_in_naive,
+        check_out_naive,
     ):
         raise ValueError("Listing is not available for these dates")
     
     db_booking = Booking(
         guest_id=guest_id,
         listing_id=booking.listing_id,
-        check_in=booking.check_in,
-        check_out=booking.check_out,
+        check_in=check_in_naive,
+        check_out=check_out_naive,
         num_guests=booking.num_guests,
         special_requests=booking.special_requests,
         total_price=price_info["total_price"],
