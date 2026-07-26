@@ -84,9 +84,14 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 - Listing detail page with gallery, amenities, reviews, host summary, and booking card
 - Booking validation for date order and backend overlap prevention
 - Wishlist save/remove flow and wishlist page
+- Trips page for upcoming, past, and cancelled guest reservations
 - Host dashboard with listing create, edit, delete, and metrics
 - Loading skeletons, 404 page, global error state, toast notifications
 - Backend API tests and frontend unit/component tests
+
+## Checklist
+
+The living requirements tracker is in [docs/PROJECT_CHECKLIST.md](docs/PROJECT_CHECKLIST.md).
 
 ## Mock Users
 
