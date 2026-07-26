@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
 from datetime import datetime
 from app.models.booking import BookingStatus
@@ -17,6 +17,8 @@ class BookingCreate(BookingBase):
 
 
 class BookingResponse(BookingBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     guest_id: int
     total_price: float
@@ -24,9 +26,6 @@ class BookingResponse(BookingBase):
     service_fee: float
     status: BookingStatus
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class BookingDetail(BookingResponse):

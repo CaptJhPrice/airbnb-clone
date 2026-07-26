@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
 from datetime import datetime
 
@@ -21,10 +21,9 @@ class ReviewCreate(ReviewBase):
 
 
 class ReviewResponse(ReviewBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     user_id: int
     is_visible: bool
     created_at: datetime
-
-    class Config:
-        from_attributes = True

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List
 from datetime import datetime
 from app.models.listing import PropertyType
@@ -15,11 +15,10 @@ class CategoryCreate(CategoryBase):
 
 
 class CategoryResponse(CategoryBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class AmenityBase(BaseModel):
@@ -33,11 +32,10 @@ class AmenityCreate(AmenityBase):
 
 
 class AmenityResponse(AmenityBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class ListingImageBase(BaseModel):
@@ -48,11 +46,10 @@ class ListingImageBase(BaseModel):
 
 
 class ListingImageResponse(ListingImageBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class ListingBase(BaseModel):
@@ -101,6 +98,8 @@ class ListingUpdate(BaseModel):
 
 
 class ListingResponse(ListingBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     host_id: int
     is_active: bool
@@ -109,9 +108,6 @@ class ListingResponse(ListingBase):
     images: List[ListingImageResponse] = []
     average_rating: Optional[float] = None
     review_count: int = 0
-
-    class Config:
-        from_attributes = True
 
 
 class ListingDetail(ListingResponse):

@@ -1,8 +1,9 @@
-from pydantic_settings import BaseSettings
-from typing import Optional
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
+
     PROJECT_NAME: str = "Airbnb Clone API"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
@@ -17,10 +18,6 @@ class Settings(BaseSettings):
     
     # CORS
     BACKEND_CORS_ORIGINS: list = ["http://localhost:3000", "http://localhost:3001"]
-    
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
 
 
 settings = Settings()

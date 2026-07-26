@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List
 from datetime import datetime
 
@@ -14,13 +14,12 @@ class WishlistCreate(WishlistBase):
 
 
 class WishlistResponse(WishlistBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     user_id: int
     created_at: datetime
     items: List[dict] = []
-
-    class Config:
-        from_attributes = True
 
 
 class WishlistItemCreate(BaseModel):
