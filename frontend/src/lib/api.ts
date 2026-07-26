@@ -1,7 +1,8 @@
 import axios from "axios";
-import { fallbackCategories, fallbackListings } from "@/lib/fallback-data";
+import { fallbackBookings, fallbackCategories, fallbackListings } from "@/lib/fallback-data";
 import type {
   BookingPayload,
+  Booking,
   Category,
   Listing,
   ListingDetail,
@@ -93,6 +94,24 @@ export async function deleteListing(id: number, hostId = 1) {
 
 export async function createBooking(payload: BookingPayload, guestId = 2) {
   const { data } = await api.post("/bookings/", payload, {
+    params: { guest_id: guestId },
+  });
+  return data;
+}
+
+export async function getBookings(guestId = 2): Promise<Booking[]> {
+  try {
+    const { data } = await api.get<Booking[]>("/bookings/", {
+      params: { guest_id: guestId },
+    });
+    return data;
+  } catch {
+    return fallbackBookings.filter((booking) => booking.guest_id === guestId);
+  }
+}
+
+export async function cancelBooking(bookingId: number, guestId = 2): Promise<Booking> {
+  const { data } = await api.post<Booking>(`/bookings/${bookingId}/cancel`, null, {
     params: { guest_id: guestId },
   });
   return data;

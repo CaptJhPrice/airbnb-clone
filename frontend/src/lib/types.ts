@@ -134,5 +134,21 @@ export type BookingPayload = {
   check_in: string;
   check_out: string;
   num_guests: number;
-  special_requests?: string;
+  special_requests?: string | null;
+};
+
+export type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
+
+export type Booking = BookingPayload & {
+  id: number;
+  guest_id: number;
+  total_price: number;
+  cleaning_fee: number;
+  service_fee: number;
+  status: BookingStatus;
+  created_at: string;
+};
+
+export type Trip = Booking & {
+  listing: ListingDetail | null;
 };

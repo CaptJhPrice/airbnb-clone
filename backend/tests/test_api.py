@@ -122,6 +122,18 @@ def test_booking_prevents_overlapping_reservations():
         delete_listing(listing_id)
 
 
+def test_booking_detail_and_listing_routes_are_serialized():
+    detail = client.get("/api/v1/bookings/1")
+    assert detail.status_code == 200
+    data = detail.json()
+    assert isinstance(data["listing"], dict)
+    assert isinstance(data["guest"], dict)
+
+    listing_bookings = client.get("/api/v1/bookings/listing/1?host_id=1")
+    assert listing_bookings.status_code == 200
+    assert isinstance(listing_bookings.json(), list)
+
+
 def test_wishlist_response_shape():
     response = client.get("/api/v1/wishlists/?user_id=2")
     assert response.status_code == 200

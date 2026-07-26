@@ -55,6 +55,9 @@ export function SiteHeader({ categories = [] }: SiteHeaderProps) {
         </nav>
 
         <div className="hidden items-center gap-2 lg:flex">
+          <Link href="/trips" className="rounded-full px-4 py-2 text-sm font-semibold hover:bg-neutral-100">
+            Trips
+          </Link>
           <Link href="/wishlists" className="rounded-full px-4 py-2 text-sm font-semibold hover:bg-neutral-100">
             Wishlists
           </Link>

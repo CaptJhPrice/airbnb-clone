@@ -1,4 +1,4 @@
-import type { Category, ListingDetail } from "@/lib/types";
+import type { Booking, Category, ListingDetail } from "@/lib/types";
 
 export const fallbackCategories: Category[] = [
   { id: 1, name: "Amazing Views", icon: "View", created_at: new Date().toISOString() },
@@ -106,5 +106,36 @@ export const fallbackListings: ListingDetail[] = [
     category: fallbackCategories[2],
     amenities: [{ id: 5, name: "Heating", created_at: new Date().toISOString() }, { id: 6, name: "BBQ", created_at: new Date().toISOString() }],
     reviews: [],
+  },
+];
+
+export const fallbackBookings: Booking[] = [
+  {
+    id: 1,
+    guest_id: 2,
+    listing_id: 1,
+    check_in: "2026-08-25T12:00:00.000Z",
+    check_out: "2026-08-30T12:00:00.000Z",
+    num_guests: 2,
+    special_requests: null,
+    total_price: 1250,
+    cleaning_fee: 50,
+    service_fee: 150,
+    status: "confirmed",
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: 2,
+    guest_id: 2,
+    listing_id: 3,
+    check_in: "2026-05-27T12:00:00.000Z",
+    check_out: "2026-06-01T12:00:00.000Z",
+    num_guests: 2,
+    special_requests: null,
+    total_price: 1500,
+    cleaning_fee: 75,
+    service_fee: 180,
+    status: "completed",
+    created_at: new Date().toISOString(),
   },
 ];
