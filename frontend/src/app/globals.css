@@ -30,41 +30,33 @@ body {
   color: #f8fafc;
 }
 
-.dark header {
-  background-color: rgba(11, 15, 23, 0.92) !important;
-  border-color: #1e293b !important;
+/* Precise Dark Mode Typography & Contrast Fixes */
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6 {
+  color: #f8fafc;
 }
 
-.dark main,
-.dark section,
-.dark aside,
-.dark nav,
-.dark div {
-  border-color: #1e293b;
+.dark p,
+.dark span,
+.dark label {
+  color: #cbd5e1;
 }
 
-.dark .bg-white {
-  background-color: #111827 !important;
-  color: #f8fafc !important;
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: #1e293b;
+  color: #f8fafc;
+  border-color: #334155;
 }
 
-.dark .text-slate-900,
-.dark .text-neutral-950 {
-  color: #f8fafc !important;
-}
-
-.dark .text-slate-700,
-.dark .text-slate-600,
-.dark .text-neutral-600,
-.dark .text-neutral-700 {
-  color: #94a3b8 !important;
-}
-
-.dark .border-neutral-200,
-.dark .border-neutral-300,
-.dark .border-slate-200,
-.dark .border-slate-300 {
-  border-color: #1e293b !important;
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #64748b;
 }
 
 button,

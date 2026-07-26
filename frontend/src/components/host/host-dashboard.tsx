@@ -181,15 +181,15 @@ export function HostDashboard({ categories }: { categories: Category[] }) {
   const listingsById = new Map(listings.map((listing) => [listing.id, listing]));
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[440px_1fr]">
-      <aside className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm lg:sticky lg:top-36 lg:self-start max-h-[85vh] overflow-y-auto">
+    <div className="grid gap-8 lg:grid-cols-[460px_1fr]">
+      <aside className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm lg:sticky lg:top-36 lg:self-start max-h-[85vh] overflow-y-auto">
         <div className="mb-5 flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-semibold">{editingListing ? "Edit listing" : "Create listing"}</h2>
-            <p className="mt-1 text-sm text-neutral-600">Mock host ID 1</p>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">{editingListing ? "Edit listing" : "Create listing"}</h2>
+            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Host ID 1 (Active Persona)</p>
           </div>
           {editingListing && (
-            <button onClick={cancelEditing} className="grid h-9 w-9 place-items-center rounded-full hover:bg-neutral-100" aria-label="Cancel editing">
+            <button onClick={cancelEditing} className="grid h-8 w-8 place-items-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300" aria-label="Cancel editing">
               <X size={18} />
             </button>
           )}
@@ -197,39 +197,39 @@ export function HostDashboard({ categories }: { categories: Category[] }) {
 
         <form className="space-y-4" onSubmit={handleSubmit((values) => saveMutation.mutate(values))}>
           <label className="block">
-            <span className="text-xs font-bold uppercase">Title</span>
-            <input className="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-950" {...register("title")} />
+            <span className="text-xs font-bold uppercase text-slate-700 dark:text-slate-300">Title</span>
+            <input className="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-rose-500" {...register("title")} />
           </label>
           <label className="block">
-            <span className="text-xs font-bold uppercase">Description</span>
-            <textarea rows={4} className="mt-1 w-full resize-none rounded-xl border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-950" {...register("description")} />
+            <span className="text-xs font-bold uppercase text-slate-700 dark:text-slate-300">Description</span>
+            <textarea rows={3} className="mt-1 w-full resize-none rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-rose-500" {...register("description")} />
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
-              <span className="text-xs font-bold uppercase">City</span>
-              <input className="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-950" {...register("location_city")} />
+              <span className="text-xs font-bold uppercase text-slate-700 dark:text-slate-300">City</span>
+              <input className="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-rose-500" {...register("location_city")} />
             </label>
             <label className="block">
-              <span className="text-xs font-bold uppercase">Country</span>
-              <input className="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-950" {...register("location_country")} />
+              <span className="text-xs font-bold uppercase text-slate-700 dark:text-slate-300">Country</span>
+              <input className="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-rose-500" {...register("location_country")} />
             </label>
           </div>
           <label className="block">
-            <span className="text-xs font-bold uppercase">Address</span>
-            <input className="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-950" {...register("location_address")} />
+            <span className="text-xs font-bold uppercase text-slate-700 dark:text-slate-300">Address</span>
+            <input className="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-rose-500" {...register("location_address")} />
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
-              <span className="text-xs font-bold uppercase">Type</span>
-              <select className="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-950" {...register("property_type")}>
+              <span className="text-xs font-bold uppercase text-slate-700 dark:text-slate-300">Type</span>
+              <select className="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-rose-500" {...register("property_type")}>
                 {["apartment", "house", "villa", "cabin", "loft", "room"].map((type) => (
                   <option key={type} value={type}>{type}</option>
                 ))}
               </select>
             </label>
             <label className="block">
-              <span className="text-xs font-bold uppercase">Category</span>
-              <select className="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-950" {...register("category_id")}>
+              <span className="text-xs font-bold uppercase text-slate-700 dark:text-slate-300">Category</span>
+              <select className="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-rose-500" {...register("category_id")}>
                 {categories.map((category) => (
                   <option key={category.id} value={category.id}>{category.name}</option>
                 ))}
@@ -238,39 +238,39 @@ export function HostDashboard({ categories }: { categories: Category[] }) {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
-              <span className="text-xs font-bold uppercase">Nightly price</span>
-              <input type="number" className="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-950" {...register("price_per_night")} />
+              <span className="text-xs font-bold uppercase text-slate-700 dark:text-slate-300">Nightly price</span>
+              <input type="number" className="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-rose-500" {...register("price_per_night")} />
             </label>
             <label className="block">
-              <span className="text-xs font-bold uppercase">Cleaning fee</span>
-              <input type="number" className="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-950" {...register("cleaning_fee")} />
+              <span className="text-xs font-bold uppercase text-slate-700 dark:text-slate-300">Cleaning fee</span>
+              <input type="number" className="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-rose-500" {...register("cleaning_fee")} />
             </label>
           </div>
           <div className="grid grid-cols-4 gap-2">
             {(["bedrooms", "beds", "bathrooms", "max_guests"] as const).map((field) => (
               <label key={field} className="block">
-                <span className="text-[10px] font-bold uppercase">{field.replace("_", " ")}</span>
-                <input type="number" className="mt-1 w-full rounded-xl border border-neutral-300 px-2 py-2 text-sm outline-none focus:border-neutral-950" {...register(field)} />
+                <span className="text-[10px] font-bold uppercase text-slate-700 dark:text-slate-300">{field.replace("_", " ")}</span>
+                <input type="number" className="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-2 text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-rose-500" {...register(field)} />
               </label>
             ))}
           </div>
 
-          {/* Photo Manager Component */}
-          <div className="border-t pt-4">
+          {/* Photo Manager Component with PC/Laptop Upload Support */}
+          <div className="border-t border-slate-200 dark:border-slate-800 pt-4">
             <MultiPhotoManager images={photos} onChange={setPhotos} />
           </div>
 
           {/* Amenity Picker */}
-          <div className="border-t pt-4 space-y-2">
-            <span className="block text-xs font-bold uppercase text-slate-900">Amenities</span>
-            <div className="grid grid-cols-2 gap-2 max-h-36 overflow-y-auto p-1 border rounded-xl">
+          <div className="border-t border-slate-200 dark:border-slate-800 pt-4 space-y-2">
+            <span className="block text-xs font-bold uppercase text-slate-900 dark:text-slate-100">Amenities</span>
+            <div className="grid grid-cols-2 gap-2 max-h-36 overflow-y-auto p-1 border rounded-xl border-slate-200 dark:border-slate-700">
               {amenitiesList.map((amenity: Amenity) => {
                 const checked = selectedAmenityIds.includes(amenity.id);
                 return (
                   <label
                     key={amenity.id}
                     className={`flex items-center gap-2 p-2 rounded-lg border text-xs cursor-pointer transition ${
-                      checked ? "bg-rose-50 border-rose-300 text-rose-900 font-semibold" : "bg-white border-slate-200"
+                      checked ? "bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-700 text-rose-900 dark:text-rose-300 font-semibold" : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
                     }`}
                   >
                     <input
@@ -290,7 +290,7 @@ export function HostDashboard({ categories }: { categories: Category[] }) {
 
           <button
             disabled={saveMutation.isPending}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#ff385c] font-bold text-white hover:bg-[#e31c5f] disabled:opacity-60"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#ff385c] font-bold text-white hover:bg-[#e31c5f] disabled:opacity-60 shadow-md"
           >
             {editingListing ? <Save size={18} /> : <Plus size={18} />}
             {saveMutation.isPending ? "Saving..." : editingListing ? "Save changes" : "Create listing"}
@@ -299,56 +299,59 @@ export function HostDashboard({ categories }: { categories: Category[] }) {
       </aside>
 
       <section>
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-slate-900">Host Dashboard</h1>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Host Dashboard</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Manage listings, photos, reservations, and pricing</p>
+          </div>
           <Link
             href="/host/availability"
-            className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition"
+            className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 dark:bg-slate-800 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 dark:hover:bg-slate-700 transition shadow-sm"
           >
-            <CalendarIcon className="w-4 h-4 text-rose-400" /> Manage Availability Calendar
+            <CalendarIcon className="w-4 h-4 text-rose-400" /> Availability Calendar
           </Link>
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-neutral-200 p-5 bg-white">
-            <p className="text-sm text-neutral-600">Active listings</p>
-            <p className="mt-2 text-3xl font-semibold">{activeListings}</p>
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 p-5 bg-white dark:bg-slate-900 shadow-sm">
+            <p className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400">Active listings</p>
+            <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{activeListings}</p>
           </div>
-          <div className="rounded-2xl border border-neutral-200 p-5 bg-white">
-            <p className="text-sm text-neutral-600">Average nightly rate</p>
-            <p className="mt-2 text-3xl font-semibold">{formatCurrency(averageRate)}</p>
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 p-5 bg-white dark:bg-slate-900 shadow-sm">
+            <p className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400">Average nightly rate</p>
+            <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{formatCurrency(averageRate)}</p>
           </div>
-          <div className="rounded-2xl border border-neutral-200 p-5 bg-white">
-            <p className="text-sm text-neutral-600">Booking value</p>
-            <p className="mt-2 text-3xl font-semibold">{formatCurrency(bookingValue)}</p>
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 p-5 bg-white dark:bg-slate-900 shadow-sm">
+            <p className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400">Booking value</p>
+            <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{formatCurrency(bookingValue)}</p>
           </div>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-neutral-200 p-5 shadow-sm bg-white">
+        <div className="mt-6 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm bg-white dark:bg-slate-900">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl font-semibold">Reservations</h2>
-              <p className="mt-1 text-sm text-neutral-600">Bookings across your listings</p>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Reservations</h2>
+              <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Bookings across your properties</p>
             </div>
-            <CalendarDays size={22} />
+            <CalendarDays size={22} className="text-slate-700 dark:text-slate-300" />
           </div>
           {bookingsLoading ? (
-            <p className="text-sm text-neutral-600">Loading reservations...</p>
+            <p className="text-sm text-slate-500">Loading reservations...</p>
           ) : bookings.length === 0 ? (
-            <p className="text-sm text-neutral-600">No reservations yet.</p>
+            <p className="text-sm text-slate-500">No reservations yet.</p>
           ) : (
             <div className="space-y-3">
               {bookings.slice(0, 6).map((booking: Booking) => {
                 const listing = listingsById.get(booking.listing_id);
                 return (
-                  <div key={booking.id} className="grid gap-2 rounded-xl border border-neutral-200 p-4 text-sm md:grid-cols-[1fr_auto]">
+                  <div key={booking.id} className="grid gap-2 rounded-xl border border-slate-200 dark:border-slate-800 p-4 text-sm md:grid-cols-[1fr_auto] bg-slate-50/50 dark:bg-slate-800/50">
                     <div>
-                      <p className="font-semibold">{listing?.title ?? `Listing #${booking.listing_id}`}</p>
-                      <p className="mt-1 text-neutral-600">
-                        {formatDate(booking.check_in)} - {formatDate(booking.check_out)} / {booking.num_guests} guests / {booking.status}
+                      <p className="font-bold text-slate-900 dark:text-white">{listing?.title ?? `Listing #${booking.listing_id}`}</p>
+                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        {formatDate(booking.check_in)} - {formatDate(booking.check_out)} / {booking.num_guests} guests / <span className="font-semibold text-rose-600 capitalize">{booking.status}</span>
                       </p>
                     </div>
-                    <p className="font-semibold">{formatCurrency(booking.total_price)}</p>
+                    <p className="font-bold text-slate-900 dark:text-white">{formatCurrency(booking.total_price)}</p>
                   </div>
                 );
               })}
@@ -358,38 +361,38 @@ export function HostDashboard({ categories }: { categories: Category[] }) {
 
         <div className="mt-6 space-y-4">
           {isLoading ? (
-            <div className="rounded-2xl border border-neutral-200 p-8 text-neutral-600 bg-white">Loading listings...</div>
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 p-8 text-slate-500 bg-white dark:bg-slate-900">Loading listings...</div>
           ) : (
             listings.map((listing) => {
               const primaryImage = listing.images.find((image) => image.is_primary) ?? listing.images[0];
               return (
-                <article key={listing.id} className="grid gap-4 rounded-2xl border border-neutral-200 p-4 shadow-sm bg-white md:grid-cols-[180px_1fr_auto]">
-                  <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-neutral-100 md:aspect-auto">
+                <article key={listing.id} className="grid gap-4 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm bg-white dark:bg-slate-900 md:grid-cols-[180px_1fr_auto]">
+                  <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800 md:aspect-auto">
                     {primaryImage ? (
-                      <Image src={primaryImage.url} alt={primaryImage.alt_text ?? listing.title} fill sizes="180px" className="object-cover" />
+                      <Image src={primaryImage.url} alt={primaryImage.alt_text ?? listing.title} fill sizes="180px" className="object-cover" unoptimized />
                     ) : (
-                      <div className="grid h-full place-items-center text-neutral-400">
+                      <div className="grid h-full place-items-center text-slate-400">
                         <Home size={24} />
                       </div>
                     )}
                   </div>
                   <div>
-                    <h2 className="text-lg font-semibold">{listing.title}</h2>
-                    <p className="mt-1 text-sm text-neutral-600">{listing.location_city}, {listing.location_country}</p>
-                    <p className="mt-2 text-sm text-neutral-700">
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-white">{listing.title}</h2>
+                    <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{listing.location_city}, {listing.location_country}</p>
+                    <p className="mt-2 text-xs text-slate-700 dark:text-slate-300">
                       {listing.max_guests} guests / {listing.bedrooms} bedrooms / {listing.beds} beds / {listing.bathrooms} baths
                     </p>
-                    <p className="mt-3 font-semibold">{formatCurrency(listing.price_per_night)} night</p>
+                    <p className="mt-3 font-bold text-slate-900 dark:text-white">{formatCurrency(listing.price_per_night)} <span className="font-normal text-xs text-slate-500">night</span></p>
                   </div>
                   <div className="flex items-start gap-2 md:flex-col">
-                    <button onClick={() => startEditing(listing)} className="flex items-center gap-2 rounded-xl border border-neutral-300 px-4 py-2 text-sm font-semibold hover:bg-neutral-50">
+                    <button onClick={() => startEditing(listing)} className="flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-700 px-4 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
                       <Edit3 size={16} />
                       Edit
                     </button>
                     <button
                       onClick={() => deleteMutation.mutate(listing.id)}
                       disabled={deleteMutation.isPending}
-                      className="flex items-center gap-2 rounded-xl border border-neutral-300 px-4 py-2 text-sm font-semibold text-[#c13515] hover:bg-neutral-50 disabled:opacity-60"
+                      className="flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-700 px-4 py-2 text-xs font-bold text-[#c13515] hover:bg-rose-50 dark:hover:bg-rose-950/40 transition disabled:opacity-60"
                     >
                       <Trash2 size={16} />
                       Delete
