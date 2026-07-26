@@ -14,10 +14,10 @@ Status legend:
 - [x] Initialize frontend with Next.js, TypeScript, App Router, Tailwind CSS
 - [x] Add strict free/open-source stack only
 - [x] Add root Git repository and milestone commits
-- [~] Push to GitHub
+- [x] Push to GitHub
   - Local Git is ready.
-  - GitHub CLI is installed.
-  - Blocked until GitHub browser authentication is completed.
+  - Remote configured at git@github.com:CaptJhPrice/airbnb-clone.git.
+  - Code successfully pushed to main branch.
 
 ## Backend
 
