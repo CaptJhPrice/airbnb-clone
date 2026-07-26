@@ -64,6 +64,10 @@ npm run test
 npm run build
 ```
 
+## GitHub
+
+The root repository is initialized on `main`. See [docs/GITHUB.md](docs/GITHUB.md) for authentication, remote setup, and push commands.
+
 ## Implemented Features
 
 - Home page with Airbnb-style header, category navigation, search, filters, sort, and responsive listing grid
