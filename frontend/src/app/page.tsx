@@ -52,7 +52,7 @@ export default async function Home({ searchParams }: HomePageProps) {
         <Suspense>
           <FilterBar filters={filters} resultCount={listings.length} />
         </Suspense>
-        <HomeListingView listings={listings} />
+        <HomeListingView initialListings={listings} filters={filters} />
       </main>
       <SiteFooter />
     </>

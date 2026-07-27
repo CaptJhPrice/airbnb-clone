@@ -33,7 +33,7 @@ export async function getListings(filters: ListingFilters = {}): Promise<Listing
       if (filters.category_id && listing.category_id !== filters.category_id) return false;
       if (filters.location) {
         const query = filters.location.toLowerCase();
-        const haystack = `${listing.location_city} ${listing.location_country}`.toLowerCase();
+        const haystack = `${listing.location_city} ${listing.location_country} ${listing.location_address} ${listing.title}`.toLowerCase();
         if (!haystack.includes(query)) return false;
       }
       if (filters.min_guests && listing.max_guests < filters.min_guests) return false;

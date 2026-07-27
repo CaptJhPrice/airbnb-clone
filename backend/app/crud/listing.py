@@ -83,8 +83,11 @@ def get_listings(
             .group_by(Review.listing_id)
             .subquery()
         )
-        query = query.join(subquery, Listing.id == subquery.c.listing_id).filter(
-            subquery.c.avg_rating >= min_rating
+        query = query.outerjoin(subquery, Listing.id == subquery.c.listing_id).filter(
+            or_(
+                subquery.c.avg_rating >= min_rating,
+                subquery.c.avg_rating == None
+            )
         )
 
     if sort_by == "price_asc":
