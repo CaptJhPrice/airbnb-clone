@@ -19,6 +19,7 @@ export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1
 export const API_V1_URL = `${API_BASE_URL}/api/v1`;
 
 const LOCAL_STORAGE_LISTINGS_KEY = "staybnb_user_created_listings";
+const LOCAL_STORAGE_BOOKINGS_KEY = "staybnb_user_bookings";
 
 function getStoredListings(): ListingDetail[] {
   if (typeof window === "undefined") return [];
@@ -58,6 +59,27 @@ function getAllCombinedListings(baseListings: ListingDetail[]): ListingDetail[] 
   const storedIds = new Set(stored.map((l) => l.id));
   const filteredBase = baseListings.filter((l) => !storedIds.has(l.id));
   return [...stored, ...filteredBase];
+}
+
+function getStoredBookings(): Booking[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(LOCAL_STORAGE_BOOKINGS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveStoredBooking(booking: Booking) {
+  if (typeof window === "undefined") return;
+  try {
+    const existing = getStoredBookings();
+    const updated = [booking, ...existing.filter((b) => b.id !== booking.id)];
+    localStorage.setItem(LOCAL_STORAGE_BOOKINGS_KEY, JSON.stringify(updated));
+  } catch (e) {
+    console.error("Failed to save booking in localStorage:", e);
+  }
 }
 
 const api = axios.create({
@@ -193,17 +215,16 @@ export async function createListing(payload: ListingFormPayload, hostId = 1): Pr
     reviews: [],
   };
 
+  saveStoredListing(newListing);
+  fallbackListings.unshift(newListing);
+
   try {
     const { data } = await api.post<Listing>("/listings/", payload, {
       params: { host_id: hostId },
     });
-    // Persist listing to browser storage as well so it stays after closing site
-    saveStoredListing(newListing);
     return data;
   } catch (error) {
     console.warn("API createListing fallback triggered:", error);
-    fallbackListings.unshift(newListing);
-    saveStoredListing(newListing);
     return newListing;
   }
 }
@@ -290,64 +311,74 @@ export async function setListingAvailability(
 }
 
 export async function createBooking(payload: BookingPayload, guestId = 2): Promise<Booking> {
+  const nights = Math.max(
+    1,
+    Math.ceil((new Date(payload.check_out).getTime() - new Date(payload.check_in).getTime()) / (1000 * 60 * 60 * 24))
+  );
+  const allListings = getAllCombinedListings(fallbackListings);
+  const listing = allListings.find((l) => l.id === payload.listing_id);
+  const pricePerNight = listing?.price_per_night ?? 150;
+  const cleaningFee = listing?.cleaning_fee ?? 25;
+  const basePrice = nights * pricePerNight;
+  const serviceFee = basePrice * 0.12;
+  const subtotal = basePrice + cleaningFee + serviceFee;
+  const tax = subtotal * 0.10;
+  const totalPrice = subtotal + tax;
+
+  const newBooking: Booking = {
+    id: Date.now(),
+    guest_id: guestId,
+    listing_id: payload.listing_id,
+    check_in: payload.check_in,
+    check_out: payload.check_out,
+    num_guests: payload.num_guests,
+    special_requests: payload.special_requests,
+    total_price: totalPrice,
+    cleaning_fee: cleaningFee,
+    service_fee: serviceFee,
+    status: "confirmed",
+    created_at: new Date().toISOString(),
+  };
+
+  saveStoredBooking(newBooking);
+  fallbackBookings.unshift(newBooking);
+
   try {
     const { data } = await api.post<Booking>("/bookings/", payload, {
       params: { guest_id: guestId },
     });
     return data;
   } catch (error: any) {
-    const nights = Math.max(
-      1,
-      Math.ceil((new Date(payload.check_out).getTime() - new Date(payload.check_in).getTime()) / (1000 * 60 * 60 * 24))
-    );
-    const allListings = getAllCombinedListings(fallbackListings);
-    const listing = allListings.find((l) => l.id === payload.listing_id);
-    const pricePerNight = listing?.price_per_night ?? 150;
-    const cleaningFee = listing?.cleaning_fee ?? 25;
-    const basePrice = nights * pricePerNight;
-    const serviceFee = basePrice * 0.12;
-    const subtotal = basePrice + cleaningFee + serviceFee;
-    const tax = subtotal * 0.10;
-    const totalPrice = subtotal + tax;
-
-    const newBooking: Booking = {
-      id: Date.now(),
-      guest_id: guestId,
-      listing_id: payload.listing_id,
-      check_in: payload.check_in,
-      check_out: payload.check_out,
-      num_guests: payload.num_guests,
-      special_requests: payload.special_requests,
-      total_price: totalPrice,
-      cleaning_fee: cleaningFee,
-      service_fee: serviceFee,
-      status: "confirmed",
-      created_at: new Date().toISOString(),
-    };
-    fallbackBookings.unshift(newBooking);
     return newBooking;
   }
 }
 
 export async function getUserBookings(guestId = 2): Promise<Booking[]> {
+  const stored = getStoredBookings();
   try {
     const { data } = await api.get<Booking[]>("/bookings/", {
       params: { guest_id: guestId },
     });
-    return data;
+    const ids = new Set(data.map((b) => b.id));
+    return [...data, ...stored.filter((b) => !ids.has(b.id))];
   } catch {
-    return fallbackBookings.filter((booking) => booking.guest_id === guestId);
+    const ids = new Set(fallbackBookings.map((b) => b.id));
+    return [...fallbackBookings, ...stored.filter((b) => !ids.has(b.id))];
   }
 }
 
 export async function getListingBookings(listingId: number, hostId = 1): Promise<Booking[]> {
+  const stored = getStoredBookings().filter((b) => b.listing_id === listingId);
   try {
     const { data } = await api.get<Booking[]>(`/bookings/listing/${listingId}`, {
       params: { host_id: hostId },
     });
-    return data;
+    const ids = new Set(data.map((b) => b.id));
+    return [...data, ...stored.filter((b) => !ids.has(b.id))];
   } catch {
-    return fallbackBookings.filter((booking) => booking.listing_id === listingId);
+    const base = fallbackBookings.filter((booking) => booking.listing_id === listingId);
+    const ids = new Set(base.map((b) => b.id));
+    return [...base, ...stored.filter((b) => !ids.has(b.id))];
   }
 }
 
