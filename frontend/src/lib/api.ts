@@ -209,7 +209,7 @@ export async function createListing(payload: ListingFormPayload, hostId = 1): Pr
       id: hostId,
       full_name: "Host User",
       username: `host_${hostId}`,
-      email: `host${hostId}@staybnb.com`,
+      email: `host${hostId}@airbnb.com`,
     },
     amenities: [],
     reviews: [],

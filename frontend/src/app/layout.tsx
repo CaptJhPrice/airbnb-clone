@@ -3,8 +3,8 @@ import { AppProviders } from "@/components/providers/app-providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Staybnb | Holiday rentals and unique homes",
-  description: "A full-stack Airbnb-inspired rental marketplace built with Next.js and FastAPI.",
+  title: "Airbnb | Holiday rentals and unique homes",
+  description: "Book unique places to stay and things to do on Airbnb.",
 };
 
 export default function RootLayout({

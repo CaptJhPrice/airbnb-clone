@@ -10,6 +10,8 @@ import { AuthModal } from "./AuthModal";
 import { AirbnbSearchBar } from "./AirbnbSearchBar";
 import toast from "react-hot-toast";
 
+import { AirbnbLogo } from "./AirbnbLogo";
+
 type SiteHeaderProps = {
   categories?: Category[];
 };
@@ -88,10 +90,7 @@ export function SiteHeader({ categories = [] }: SiteHeaderProps) {
     <>
       <header className="sticky top-0 z-40 border-b border-neutral-200 bg-white/95 backdrop-blur dark:bg-slate-900/95 dark:border-slate-800">
         <div className="mx-auto flex h-20 max-w-[1760px] items-center justify-between px-6 lg:px-10">
-          <Link href="/" className="flex items-center gap-2 text-[#ff385c]" aria-label="Staybnb home">
-            <span className="grid h-9 w-9 place-items-center rounded-full bg-[#ff385c] text-lg font-black text-white">A</span>
-            <span className="hidden text-xl font-bold tracking-tight md:inline">staybnb</span>
-          </Link>
+          <AirbnbLogo />
 
           <nav className="hidden items-center rounded-full border border-neutral-200 bg-white p-1 text-sm font-medium shadow-sm xl:flex dark:bg-slate-800 dark:border-slate-700">
             {["Stays", "Experiences", "Services"].map((item, index) => (

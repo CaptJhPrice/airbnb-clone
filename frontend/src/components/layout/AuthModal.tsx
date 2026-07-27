@@ -159,7 +159,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
         {/* Modal Body */}
         <div className="p-6 space-y-5">
           <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
-            Welcome to staybnb
+            Welcome to Airbnb
           </h3>
 
           {/* Quick Demo Login Option */}
@@ -170,14 +170,14 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
-                onClick={() => handleQuickLogin("guest", "Jane Smith", "guest@staybnb.com")}
+                onClick={() => handleQuickLogin("guest", "Jane Smith", "guest@airbnb.com")}
                 className="px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-white hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:border-rose-300 transition text-center shadow-sm"
               >
                 Guest Persona
               </button>
               <button
                 type="button"
-                onClick={() => handleQuickLogin("host", "John Doe", "host@staybnb.com")}
+                onClick={() => handleQuickLogin("host", "John Doe", "host@airbnb.com")}
                 className="px-3 py-2 bg-slate-900 dark:bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-slate-800 dark:hover:bg-rose-700 transition text-center shadow-sm"
               >
                 Host Persona

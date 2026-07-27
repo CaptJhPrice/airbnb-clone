@@ -15,15 +15,15 @@ export function SiteFooter() {
           <p>Community forum</p>
         </div>
         <div>
-          <h2 className="mb-3 font-bold text-neutral-950">Staybnb</h2>
+          <h2 className="mb-3 font-bold text-neutral-950 dark:text-white">Airbnb</h2>
           <p>Newsroom</p>
           <p>Careers</p>
           <p>Privacy and terms</p>
         </div>
       </div>
-      <div className="border-t border-neutral-200 px-6 py-5 text-sm text-neutral-600 lg:px-10">
+      <div className="border-t border-neutral-200 dark:border-slate-800 px-6 py-5 text-sm text-neutral-600 dark:text-slate-400 lg:px-10">
         <div className="mx-auto flex max-w-[1760px] flex-wrap items-center justify-between gap-3">
-          <span>© 2026 Staybnb, Inc.</span>
+          <span>© 2026 Airbnb, Inc.</span>
           <span>English (IN) · ₹ INR</span>
         </div>
       </div>
