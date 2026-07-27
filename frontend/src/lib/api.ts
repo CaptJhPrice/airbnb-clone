@@ -18,18 +18,67 @@ import type {
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
 export const API_V1_URL = `${API_BASE_URL}/api/v1`;
 
+const LOCAL_STORAGE_LISTINGS_KEY = "staybnb_user_created_listings";
+
+function getStoredListings(): ListingDetail[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(LOCAL_STORAGE_LISTINGS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveStoredListing(listing: ListingDetail) {
+  if (typeof window === "undefined") return;
+  try {
+    const existing = getStoredListings();
+    const updated = [listing, ...existing.filter((l) => l.id !== listing.id)];
+    localStorage.setItem(LOCAL_STORAGE_LISTINGS_KEY, JSON.stringify(updated));
+  } catch (e) {
+    console.error("Failed to persist listing in localStorage:", e);
+  }
+}
+
+function deleteStoredListing(id: number) {
+  if (typeof window === "undefined") return;
+  try {
+    const existing = getStoredListings();
+    const updated = existing.filter((l) => l.id !== id);
+    localStorage.setItem(LOCAL_STORAGE_LISTINGS_KEY, JSON.stringify(updated));
+  } catch (e) {
+    console.error("Failed to delete listing from localStorage:", e);
+  }
+}
+
+function getAllCombinedListings(baseListings: ListingDetail[]): ListingDetail[] {
+  const stored = getStoredListings();
+  if (stored.length === 0) return baseListings;
+  const storedIds = new Set(stored.map((l) => l.id));
+  const filteredBase = baseListings.filter((l) => !storedIds.has(l.id));
+  return [...stored, ...filteredBase];
+}
+
 const api = axios.create({
   baseURL: API_V1_URL,
   timeout: 30000,
 });
 
 export async function getListings(filters: ListingFilters = {}): Promise<Listing[]> {
+  let baseListings: ListingDetail[] = [];
   try {
     const params: Record<string, unknown> = { ...filters };
-    const { data } = await api.get<Listing[]>("/listings/", { params });
-    return data;
+    const { data } = await api.get<ListingDetail[]>("/listings/", { params });
+    baseListings = data;
   } catch {
-    return fallbackListings.filter((listing) => {
+    baseListings = fallbackListings;
+  }
+
+  const allListings = getAllCombinedListings(baseListings);
+
+  return allListings
+    .filter((listing) => {
       if (filters.category_id && listing.category_id !== filters.category_id) return false;
       if (filters.location) {
         const query = filters.location.toLowerCase();
@@ -40,15 +89,15 @@ export async function getListings(filters: ListingFilters = {}): Promise<Listing
       if (filters.min_price && listing.price_per_night < filters.min_price) return false;
       if (filters.max_price && listing.price_per_night > filters.max_price) return false;
       if (filters.property_type && listing.property_type !== filters.property_type) return false;
-      if (filters.min_rating && (listing.average_rating ?? 0) < filters.min_rating) return false;
+      if (filters.min_rating && (listing.average_rating ?? 4.95) < filters.min_rating) return false;
       return true;
-    }).sort((a, b) => {
+    })
+    .sort((a, b) => {
       if (filters.sort_by === "price_asc") return a.price_per_night - b.price_per_night;
       if (filters.sort_by === "price_desc") return b.price_per_night - a.price_per_night;
       if (filters.sort_by === "newest") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       return Number(b.is_verified) - Number(a.is_verified);
     });
-  }
 }
 
 export async function getListing(id: number): Promise<ListingDetail | null> {
@@ -56,7 +105,8 @@ export async function getListing(id: number): Promise<ListingDetail | null> {
     const { data } = await api.get<ListingDetail>(`/listings/${id}`);
     return data;
   } catch {
-    return fallbackListings.find((listing) => listing.id === id) ?? null;
+    const all = getAllCombinedListings(fallbackListings);
+    return all.find((listing) => listing.id === id) ?? null;
   }
 }
 
@@ -90,64 +140,70 @@ export async function getAmenities(): Promise<Amenity[]> {
 export async function getHostListings(hostId = 1): Promise<Listing[]> {
   try {
     const { data } = await api.get<Listing[]>(`/listings/host/${hostId}`);
-    return data;
+    const all = getAllCombinedListings(data as ListingDetail[]);
+    return all.filter((listing) => listing.host_id === hostId);
   } catch {
-    return fallbackListings.filter((listing) => listing.host_id === hostId);
+    const all = getAllCombinedListings(fallbackListings);
+    return all.filter((listing) => listing.host_id === hostId);
   }
 }
 
 export async function createListing(payload: ListingFormPayload, hostId = 1): Promise<Listing> {
+  const newListing: ListingDetail = {
+    id: Date.now(),
+    host_id: hostId,
+    category_id: payload.category_id ?? 1,
+    title: payload.title,
+    description: payload.description,
+    property_type: payload.property_type,
+    location_country: payload.location_country,
+    location_city: payload.location_city,
+    location_address: payload.location_address,
+    latitude: payload.latitude ?? 15.4989,
+    longitude: payload.longitude ?? 73.8278,
+    price_per_night: payload.price_per_night,
+    cleaning_fee: payload.cleaning_fee,
+    service_fee: payload.service_fee ?? payload.price_per_night * 0.12,
+    bedrooms: payload.bedrooms,
+    beds: payload.beds,
+    bathrooms: payload.bathrooms,
+    max_guests: payload.max_guests,
+    is_active: true,
+    is_verified: true,
+    created_at: new Date().toISOString(),
+    images: (payload.images || []).map((img, i) => ({
+      id: i + 1,
+      url: img.url,
+      alt_text: img.alt_text ?? payload.title,
+      is_primary: img.is_primary ?? i === 0,
+      order: img.order ?? i,
+      created_at: new Date().toISOString(),
+    })),
+    average_rating: 4.95,
+    review_count: 12,
+    available_from: payload.available_from,
+    available_until: payload.available_until,
+    host: {
+      id: hostId,
+      full_name: "Host User",
+      username: `host_${hostId}`,
+      email: `host${hostId}@staybnb.com`,
+    },
+    amenities: [],
+    reviews: [],
+  };
+
   try {
     const { data } = await api.post<Listing>("/listings/", payload, {
       params: { host_id: hostId },
     });
+    // Persist listing to browser storage as well so it stays after closing site
+    saveStoredListing(newListing);
     return data;
   } catch (error) {
     console.warn("API createListing fallback triggered:", error);
-    const newListing: ListingDetail = {
-      id: Date.now(),
-      host_id: hostId,
-      category_id: payload.category_id ?? 1,
-      title: payload.title,
-      description: payload.description,
-      property_type: payload.property_type,
-      location_country: payload.location_country,
-      location_city: payload.location_city,
-      location_address: payload.location_address,
-      latitude: payload.latitude ?? 15.4989,
-      longitude: payload.longitude ?? 73.8278,
-      price_per_night: payload.price_per_night,
-      cleaning_fee: payload.cleaning_fee,
-      service_fee: payload.service_fee ?? payload.price_per_night * 0.12,
-      bedrooms: payload.bedrooms,
-      beds: payload.beds,
-      bathrooms: payload.bathrooms,
-      max_guests: payload.max_guests,
-      is_active: true,
-      is_verified: true,
-      created_at: new Date().toISOString(),
-      images: (payload.images || []).map((img, i) => ({
-        id: i + 1,
-        url: img.url,
-        alt_text: img.alt_text ?? payload.title,
-        is_primary: img.is_primary ?? i === 0,
-        order: img.order ?? i,
-        created_at: new Date().toISOString(),
-      })),
-      average_rating: 4.95,
-      review_count: 12,
-      available_from: payload.available_from,
-      available_until: payload.available_until,
-      host: {
-        id: hostId,
-        full_name: "Host User",
-        username: `host_${hostId}`,
-        email: `host${hostId}@staybnb.com`,
-      },
-      amenities: [],
-      reviews: [],
-    };
     fallbackListings.unshift(newListing);
+    saveStoredListing(newListing);
     return newListing;
   }
 }
@@ -160,19 +216,22 @@ export async function updateListing(id: number, payload: Partial<ListingFormPayl
     return data;
   } catch (error) {
     console.warn("API updateListing fallback triggered:", error);
-    const idx = fallbackListings.findIndex((l) => l.id === id);
+    const all = getAllCombinedListings(fallbackListings);
+    const idx = all.findIndex((l) => l.id === id);
     if (idx !== -1) {
-      fallbackListings[idx] = {
-        ...fallbackListings[idx],
+      const updated = {
+        ...all[idx],
         ...payload,
       } as ListingDetail;
-      return fallbackListings[idx];
+      saveStoredListing(updated);
+      return updated;
     }
     throw error;
   }
 }
 
 export async function deleteListing(id: number, hostId = 1) {
+  deleteStoredListing(id);
   try {
     await api.delete(`/listings/${id}`, {
       params: { host_id: hostId },
@@ -241,7 +300,8 @@ export async function createBooking(payload: BookingPayload, guestId = 2): Promi
       1,
       Math.ceil((new Date(payload.check_out).getTime() - new Date(payload.check_in).getTime()) / (1000 * 60 * 60 * 24))
     );
-    const listing = fallbackListings.find((l) => l.id === payload.listing_id);
+    const allListings = getAllCombinedListings(fallbackListings);
+    const listing = allListings.find((l) => l.id === payload.listing_id);
     const pricePerNight = listing?.price_per_night ?? 150;
     const cleaningFee = listing?.cleaning_fee ?? 25;
     const basePrice = nights * pricePerNight;
