@@ -25,7 +25,7 @@ body {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Enforce Perfect Text Readability in Dark Mode */
+/* Enforce Perfect Text & Icon Readability in Dark Mode */
 .dark body {
   background-color: #0b0f17 !important;
   color: #ffffff !important;
@@ -62,6 +62,29 @@ body {
 .dark .text-neutral-700,
 .dark .text-slate-400 {
   color: #cbd5e1 !important;
+}
+
+/* Preserve key brand colors and icons in dark mode */
+.dark .text-rose-500,
+.dark .text-rose-600,
+.dark .text-\[\#ff385c\],
+.dark .text-\[\#e61e4d\] {
+  color: #ff385c !important;
+}
+
+.dark .text-emerald-600,
+.dark .text-emerald-500,
+.dark .text-emerald-400 {
+  color: #34d399 !important;
+}
+
+.dark .text-amber-500,
+.dark .text-amber-400 {
+  color: #fbbf24 !important;
+}
+
+.dark svg {
+  stroke-width: 2px;
 }
 
 /* Dark Mode Card Backgrounds & Borders */

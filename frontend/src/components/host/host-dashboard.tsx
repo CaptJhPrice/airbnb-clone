@@ -142,8 +142,9 @@ export function HostDashboard({ categories }: { categories: Category[] }) {
       return result;
     },
     onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["listings"] });
       await queryClient.invalidateQueries({ queryKey: ["host-listings", 1] });
-      toast.success(editingListing ? "Listing updated successfully!" : "New property listed successfully!");
+      toast.success(editingListing ? "Listing updated successfully!" : "New property listed successfully! Available on guest stays grid.");
       setEditingListing(null);
       reset(defaultValues);
       setPhotos([

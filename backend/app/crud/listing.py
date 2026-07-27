@@ -109,6 +109,8 @@ def create_listing(db: Session, listing: ListingCreate, host_id: int) -> Listing
     db_listing = Listing(
         **listing.model_dump(exclude={"images", "amenity_ids"}),
         host_id=host_id,
+        is_active=True,
+        is_verified=True,
     )
     db.add(db_listing)
     db.commit()
