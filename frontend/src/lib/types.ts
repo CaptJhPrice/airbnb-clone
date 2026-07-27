@@ -66,6 +66,8 @@ export type Listing = {
   images: ListingImage[];
   average_rating?: number | null;
   review_count: number;
+  available_from?: string | null;
+  available_until?: string | null;
 };
 
 export type ListingFormPayload = {
@@ -75,6 +77,8 @@ export type ListingFormPayload = {
   location_country: string;
   location_city: string;
   location_address: string;
+  latitude?: number;
+  longitude?: number;
   price_per_night: number;
   cleaning_fee: number;
   service_fee?: number;
@@ -83,6 +87,8 @@ export type ListingFormPayload = {
   bathrooms: number;
   max_guests: number;
   category_id?: number;
+  available_from?: string;
+  available_until?: string;
   images?: Array<{
     url: string;
     alt_text?: string;

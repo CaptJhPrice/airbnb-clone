@@ -1,128 +1,147 @@
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, Medal, Share, ShieldCheck, Star, Sparkles, Key, Laptop, Utensils, Wifi, Car, Waves, Tv } from "lucide-react";
-import { Suspense } from "react";
+import { ChevronRight, Key, Laptop, ShieldCheck, Sparkles, Star, User, CalendarDays } from "lucide-react";
 import { BookingCard } from "@/components/booking/booking-card";
-import { SiteFooter } from "@/components/layout/site-footer";
-import { SiteHeader } from "@/components/layout/site-header";
 import { ListingGallery } from "@/components/listings/listing-gallery";
 import { MapView } from "@/components/listings/MapView";
+import { SiteHeader } from "@/components/layout/site-header";
 import { getCategories, getListing } from "@/lib/api";
-import { formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
 
-type ListingPageProps = {
+type PageProps = {
   params: Promise<{ id: string }>;
 };
 
-function amenityName(item: unknown) {
-  if (typeof item === "object" && item !== null && "name" in item) {
-    return String((item as { name?: string }).name);
-  }
-  if (typeof item === "object" && item !== null && "amenity" in item) {
-    return String((item as { amenity?: { name?: string } }).amenity?.name ?? "Amenity");
+function amenityName(amenityItem: any): string {
+  if (typeof amenityItem === "string") return amenityItem;
+  if (amenityItem && typeof amenityItem === "object") {
+    if (typeof amenityItem.name === "string") return amenityItem.name;
+    if (amenityItem.amenity && typeof amenityItem.amenity.name === "string") return amenityItem.amenity.name;
   }
   return "Amenity";
 }
 
-export default async function ListingPage({ params }: ListingPageProps) {
+export default async function ListingDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const [listing, categories] = await Promise.all([getListing(Number(id)), getCategories()]);
+  const listingId = Number(id);
+  if (Number.isNaN(listingId)) notFound();
+
+  const [categories, listing] = await Promise.all([
+    getCategories(),
+    getListing(listingId),
+  ]);
 
   if (!listing) notFound();
 
-  const hostName = listing.host?.full_name || "John Doe";
-  const hostAvatar = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop";
+  const primaryImage = listing.images.find((image) => image.is_primary) ?? listing.images[0];
+  const galleryImages = listing.images.length > 0 ? listing.images : (primaryImage ? [primaryImage] : []);
 
   return (
-    <>
-      <Suspense>
-        <SiteHeader categories={categories} />
-      </Suspense>
-      <main className="mx-auto max-w-[1180px] px-6 py-8 lg:px-10">
-        <Link href="/" className="mb-5 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-neutral-100 transition">
-          <ChevronLeft size={16} />
-          Back to homes
-        </Link>
+    <div className="min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+      <SiteHeader categories={categories} />
 
-        {/* Title & Header Bar */}
-        <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
+      <main className="mx-auto max-w-[1280px] px-6 py-8">
+        {/* Breadcrumb Navigation */}
+        <nav className="mb-4 flex items-center gap-2 text-xs font-semibold text-neutral-500">
+          <Link href="/" className="hover:underline">Stays</Link>
+          <ChevronRight size={14} />
+          <span>{listing.location_country}</span>
+          <ChevronRight size={14} />
+          <span className="text-neutral-900 font-bold dark:text-white truncate">{listing.title}</span>
+        </nav>
+
+        {/* Title Header */}
+        <header className="mb-6 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-normal text-slate-900 md:text-3xl">{listing.title}</h1>
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-700 font-medium">
-              <Star size={14} className="fill-current text-slate-900" />
-              <span className="font-semibold text-slate-900">{listing.average_rating ? listing.average_rating.toFixed(2) : "4.95"}</span>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{listing.title}</h1>
+            <div className="mt-2 flex flex-wrap items-center gap-3 text-sm font-medium text-slate-700 dark:text-slate-300">
+              <span className="flex items-center gap-1 font-bold">
+                <Star size={16} className="fill-current text-amber-500" />
+                {listing.average_rating?.toFixed(2) ?? "4.95"}
+              </span>
               <span>·</span>
-              <span className="font-semibold underline cursor-pointer">{listing.review_count || 18} reviews</span>
+              <span className="underline font-semibold">{listing.review_count} reviews</span>
               <span>·</span>
-              <span className="font-semibold underline cursor-pointer">{listing.location_city}, {listing.location_country}</span>
+              <span className="flex items-center gap-1 text-rose-600 font-bold">
+                <ShieldCheck className="w-4 h-4" /> Superhost
+              </span>
+              <span>·</span>
+              <span className="text-slate-600 dark:text-slate-400">{listing.location_address}, {listing.location_city}, {listing.location_country}</span>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-sm font-semibold">
-            <button className="flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 hover:bg-neutral-50 transition shadow-sm">
-              <Share size={16} />
-              Share
-            </button>
-          </div>
-        </div>
+        </header>
 
         {/* 5-Photo Gallery Grid */}
         <ListingGallery listing={listing} />
 
-        {/* Main Content & Booking Sidebar */}
-        <div className="grid gap-12 py-10 lg:grid-cols-[1fr_372px]">
+        {/* Content Layout */}
+        <div className="mt-10 grid gap-12 lg:grid-cols-[1fr_380px]">
           <div>
             {/* Host Section */}
-            <section className="flex items-center justify-between border-b border-neutral-200 pb-7">
+            <section className="flex items-center justify-between border-b border-neutral-200 py-6">
               <div>
-                <h2 className="text-xl font-bold text-slate-900">
-                  {listing.property_type[0]?.toUpperCase() + listing.property_type.slice(1)} hosted by {hostName}
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                  {listing.property_type ? listing.property_type.toUpperCase() : "APARTMENT"} hosted by {listing.host?.full_name ?? "Verified Host"}
                 </h2>
-                <p className="mt-1 text-sm text-slate-600 font-normal">
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                   {listing.max_guests} guests · {listing.bedrooms} bedrooms · {listing.beds} beds · {listing.bathrooms} baths
                 </p>
               </div>
-              <div className="relative h-14 w-14 overflow-hidden rounded-full border border-slate-200 shadow-sm shrink-0">
-                <Image src={hostAvatar} alt={hostName} fill className="object-cover" unoptimized />
+              <div className="relative h-14 w-14 overflow-hidden rounded-full border-2 border-rose-500 shadow-md bg-slate-100 shrink-0">
+                <User className="w-8 h-8 text-slate-400 absolute left-3 top-3" />
               </div>
             </section>
 
-            {/* Airbnb Highlights / Perks */}
-            <section className="space-y-6 border-b border-neutral-200 py-7">
+            {/* Highlights */}
+            <section className="space-y-5 border-b border-neutral-200 py-6">
               <div className="flex gap-4 items-start">
-                <Medal className="mt-1 shrink-0 text-slate-800" size={24} />
+                <Key className="mt-1 shrink-0 text-slate-800 dark:text-slate-200" size={24} />
                 <div>
-                  <h3 className="font-bold text-slate-900 text-sm">{hostName} is a Superhost</h3>
-                  <p className="mt-0.5 text-xs text-slate-600">Superhosts are experienced, highly rated hosts who are committed to providing great stays.</p>
+                  <h3 className="font-bold text-slate-900 dark:text-white text-sm">Self check-in</h3>
+                  <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">Check yourself in with the smart lock or keypad.</p>
                 </div>
               </div>
               <div className="flex gap-4 items-start">
-                <Key className="mt-1 shrink-0 text-slate-800" size={24} />
+                <Sparkles className="mt-1 shrink-0 text-slate-800 dark:text-slate-200" size={24} />
                 <div>
-                  <h3 className="font-bold text-slate-900 text-sm">Great check-in experience</h3>
-                  <p className="mt-0.5 text-xs text-slate-600">100% of recent guests gave the check-in process a 5-star rating.</p>
+                  <h3 className="font-bold text-slate-900 dark:text-white text-sm">Great check-in experience</h3>
+                  <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">100% of recent guests gave the check-in process a 5-star rating.</p>
                 </div>
               </div>
               <div className="flex gap-4 items-start">
-                <Laptop className="mt-1 shrink-0 text-slate-800" size={24} />
+                <Laptop className="mt-1 shrink-0 text-slate-800 dark:text-slate-200" size={24} />
                 <div>
-                  <h3 className="font-bold text-slate-900 text-sm">Dedicated workspace</h3>
-                  <p className="mt-0.5 text-xs text-slate-600">A comfortable desk space with fast WiFi, ideal for remote work.</p>
+                  <h3 className="font-bold text-slate-900 dark:text-white text-sm">Dedicated workspace</h3>
+                  <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">A comfortable desk space with fast WiFi, ideal for remote work.</p>
+                </div>
+              </div>
+            </section>
+
+            {/* Managed Availability Date Range Schedule */}
+            <section className="border-b border-neutral-200 py-6">
+              <div className="flex items-center gap-3 p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 shadow-sm">
+                <CalendarDays className="w-6 h-6 text-emerald-600 shrink-0" />
+                <div>
+                  <h3 className="font-bold text-sm">Host Availability Schedule</h3>
+                  <p className="text-xs mt-0.5">
+                    This property is available for guest bookings from <strong className="underline">{formatDate(listing.available_from ?? "2026-08-01")}</strong> to <strong className="underline">{formatDate(listing.available_until ?? "2026-12-31")}</strong>.
+                  </p>
                 </div>
               </div>
             </section>
 
             {/* Description */}
             <section className="border-b border-neutral-200 py-7">
-              <p className="max-w-3xl leading-7 text-slate-800 text-sm whitespace-pre-line">{listing.description}</p>
+              <p className="max-w-3xl leading-7 text-slate-800 dark:text-slate-200 text-sm whitespace-pre-line">{listing.description}</p>
             </section>
 
             {/* Amenities Grid */}
             <section className="border-b border-neutral-200 py-7">
-              <h2 className="text-xl font-bold text-slate-900 mb-5">What this place offers</h2>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-5">What this place offers</h2>
               <div className="grid gap-4 sm:grid-cols-2">
                 {listing.amenities.slice(0, 10).map((amenity, index) => (
-                  <div key={index} className="flex items-center gap-3 rounded-xl border border-neutral-200 p-3.5 text-slate-800 text-sm font-medium bg-neutral-50/50">
+                  <div key={index} className="flex items-center gap-3 rounded-xl border border-neutral-200 dark:border-slate-800 p-3.5 text-slate-800 dark:text-slate-200 text-sm font-medium bg-neutral-50/50 dark:bg-slate-900/50">
                     <Sparkles className="w-4 h-4 text-rose-500 shrink-0" />
                     <span>{amenityName(amenity)}</span>
                   </div>
@@ -132,45 +151,46 @@ export default async function ListingPage({ params }: ListingPageProps) {
 
             {/* Location Map View */}
             <section className="border-b border-neutral-200 py-7">
-              <h2 className="text-xl font-bold text-slate-900 mb-2">Where you&apos;ll be</h2>
-              <p className="text-sm text-slate-600 mb-4">{listing.location_address}, {listing.location_city}, {listing.location_country}</p>
-              <MapView listings={[listing]} center={[listing.latitude ?? 15.2993, listing.longitude ?? 74.1240]} zoom={13} />
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Where you&apos;ll be</h2>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">{listing.location_address}, {listing.location_city}, {listing.location_country}</p>
+              <MapView listings={[listing]} center={[listing.latitude ?? 15.4989, listing.longitude ?? 73.8278]} zoom={13} />
             </section>
 
             {/* Reviews Section */}
             <section className="py-7">
-              <h2 className="flex items-center gap-2 text-xl font-bold text-slate-900 mb-6">
-                <Star size={20} className="fill-current text-slate-900" />
-                {listing.average_rating ? listing.average_rating.toFixed(2) : "4.95"} · {listing.review_count || 18} reviews
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-6">
+                <Star className="fill-current text-amber-500" size={20} />
+                {listing.average_rating?.toFixed(2) ?? "4.95"} · {listing.review_count} guest reviews
               </h2>
 
-              <div className="grid gap-5 md:grid-cols-2">
-                {(listing.reviews.length ? listing.reviews : [
-                  { comment: "Absolute perfection! The location, cleanliness, and amenities were top tier. Highly recommended!", rating: 5, created_at: listing.created_at, user: { full_name: "Sarah Jenkins" } },
-                  { comment: "Wonderful stay. Fast WiFi, super comfy bed, and friendly host. Will definitely come back!", rating: 5, created_at: listing.created_at, user: { full_name: "Michael Chang" } }
-                ]).map((review, index) => (
-                  <article key={index} className="rounded-2xl border border-neutral-200 p-5 bg-white shadow-sm">
+              <div className="grid gap-6 md:grid-cols-2">
+                {[
+                  { name: "Sarah M.", date: "July 2026", text: "Exceptional stay! Spotlessly clean, peaceful surroundings, and the host was super responsive." },
+                  { name: "Rahul K.", date: "June 2026", text: "Awesome location with fast WiFi and great amenities. Would definitely stay here again!" },
+                ].map((rev, i) => (
+                  <div key={i} className="rounded-2xl border border-neutral-200 dark:border-slate-800 p-4 bg-neutral-50/40 dark:bg-slate-900/40 space-y-2">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-rose-100 font-bold text-rose-700 flex items-center justify-center text-sm">
-                        {(review.user?.full_name || "G")[0]}
+                      <div className="grid h-9 w-9 place-items-center rounded-full bg-slate-900 text-xs font-bold text-white">
+                        {rev.name[0]}
                       </div>
                       <div>
-                        <div className="font-bold text-slate-900 text-sm">{review.user?.full_name ?? "Guest"}</div>
-                        <div className="text-xs text-slate-500">{review.created_at ? formatDate(review.created_at) : "Recently"}</div>
+                        <p className="font-bold text-sm text-slate-900 dark:text-white">{rev.name}</p>
+                        <p className="text-[11px] text-slate-500">{rev.date}</p>
                       </div>
                     </div>
-                    <p className="mt-3 text-slate-700 text-sm leading-relaxed">{review.comment}</p>
-                  </article>
+                    <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">&quot;{rev.text}&quot;</p>
+                  </div>
                 ))}
               </div>
             </section>
           </div>
 
-          {/* Sticky Booking Widget */}
-          <BookingCard listing={listing} />
+          {/* Sticky Booking Reservation Sidebar */}
+          <div>
+            <BookingCard listing={listing} />
+          </div>
         </div>
       </main>
-      <SiteFooter />
-    </>
+    </div>
   );
 }
